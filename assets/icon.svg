@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="#4f46e5"/>
+  <!-- Ledger book -->
+  <rect x="312" y="252" width="400" height="520" rx="44" fill="#ffffff"/>
+  <rect x="312" y="252" width="72" height="520" rx="36" fill="#c7d2fe"/>
+  <rect x="440" y="360" width="200" height="36" rx="18" fill="#4f46e5"/>
+  <rect x="440" y="450" width="200" height="36" rx="18" fill="#a5b4fc"/>
+  <rect x="440" y="540" width="140" height="36" rx="18" fill="#a5b4fc"/>
+  <circle cx="610" cy="660" r="54" fill="#10b981"/>
+  <path d="M584 660l18 18 34-36" fill="none" stroke="#fff" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -14,7 +14,8 @@ Spanish**.
 > TypeScript**, **Tailwind CSS 4**, **Dexie (IndexedDB)**, **Zod** and
 > **Capacitor 8**.
 
-What's new in each version: see the [changelog](CHANGELOG.md).
+What's new in each version: see the [changelog](CHANGELOG.md). Want to help?
+Try the [public web demo](#public-web-demo) and read [CONTRIBUTING.md](CONTRIBUTING.md).
 
 > [!IMPORTANT]
 > This repository contains **no credentials**. To run or build it you must
@@ -30,20 +31,21 @@ What's new in each version: see the [changelog](CHANGELOG.md).
 3. [Repayment plans and payments](#repayment-plans-and-payments)
 4. [How the money math works](#how-the-money-math-works)
 5. [Languages](#languages)
-6. [Security and configuration](#security-and-configuration)
-7. [Getting started (development)](#getting-started-development)
-8. [Configuration](#configuration)
-9. [Google sign-in setup](#google-sign-in-setup)
-10. [Building the Android app](#building-the-android-app)
-11. [Releasing a new version](#releasing-a-new-version)
-12. [Backups and moving to a new phone](#backups-and-moving-to-a-new-phone)
-13. [Project structure](#project-structure)
-14. [Data model](#data-model)
-15. [Scripts](#scripts)
-16. [Troubleshooting](#troubleshooting)
-17. [Privacy and security](#privacy-and-security)
-18. [Guía rápida en español](#guía-rápida-en-español)
-19. [License](#license)
+6. [Public web demo](#public-web-demo)
+7. [Security and configuration](#security-and-configuration)
+8. [Getting started (development)](#getting-started-development)
+9. [Configuration](#configuration)
+10. [Google sign-in setup](#google-sign-in-setup)
+11. [Building the Android app](#building-the-android-app)
+12. [Releasing a new version](#releasing-a-new-version)
+13. [Backups and moving to a new phone](#backups-and-moving-to-a-new-phone)
+14. [Project structure](#project-structure)
+15. [Data model](#data-model)
+16. [Scripts](#scripts)
+17. [Troubleshooting](#troubleshooting)
+18. [Privacy and security](#privacy-and-security)
+19. [Guía rápida en español](#guía-rápida-en-español)
+20. [License](#license)
 
 ---
 
@@ -234,6 +236,40 @@ The app is written in English with a full Spanish (Costa Rica) translation.
 
 ---
 
+## Public web demo
+
+Besides the Android app, the same code builds a **web demo with no sign-in**,
+for people who want to try the app or help develop it.
+
+| | Android app (clients) | Web demo (public) |
+| - | --- | --- |
+| Sign-in | Google, test users only | None |
+| Where data is stored | On the phone, one ledger per Google account | In the visitor's own browser; nothing is shared or sent anywhere |
+| Built with | `npm run android:apk` | `npm run build:demo` (`NEXT_PUBLIC_DEMO_MODE=true`) |
+| Extras | | A "Demo version" banner, **Load example loans** |
+
+- Run it locally with `npm run demo`.
+- The Android build script **refuses** to build while `NEXT_PUBLIC_DEMO_MODE`
+  is on, so the no-sign-in mode can't end up in the app.
+- Like everything in the app, demo data never leaves the browser. Clearing the
+  browser's site data erases it.
+
+### Deploying the demo on Vercel
+
+`vercel.json` already tells Vercel how to build it (`npm run build:demo`, a
+static export) and adds security headers. Once:
+
+1. Sign in at [vercel.com](https://vercel.com) with your GitHub account.
+2. **Add New… → Project**, import `loan-ledger-android` and click **Deploy**.
+   No environment variables are needed.
+3. Copy the production URL (e.g. `https://loan-ledger-android.vercel.app`) into
+   this README and the repository's **About → Website** field.
+
+From then on, every push to `main` updates the demo, and every pull request gets
+its own preview link, so contributors' changes can be tried before merging.
+
+---
+
 ## Security and configuration
 
 Read this before you build anything.
@@ -306,6 +342,7 @@ app), so rebuild after changing them. `.env.local` is git-ignored; copy
 | -------- | ------- | ------- |
 | `NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID` | `1234…apps.googleusercontent.com` | OAuth **Web application** client ID. Required for Google sign-in, on Android too. |
 | `NEXT_PUBLIC_CURRENCY` | `CRC` | Currency pre-selected for new loans: `CRC` or `USD`. Defaults to `CRC`. |
+| `NEXT_PUBLIC_DEMO_MODE` | `true` | Public web demo: no sign-in. Set by `npm run demo` / `build:demo`; leave it out of `.env.local`. |
 | `NEXT_PUBLIC_LOCALE` | `en-US` | Locale used to format numbers and dates when the app is in English (BCP 47). In Spanish it's always `es-CR`. |
 
 **Adding another currency:** add its ISO code to `CURRENCIES` (and a label in
@@ -441,11 +478,13 @@ one-time loans with a yearly rate, exactly as they worked before.
 ```
 capacitor.config.ts      Android app id/name; packages the static build in out/
 next.config.ts           Static export (no server)
+vercel.json              Web demo deployment on Vercel
 android/                 Native Android project (Capacitor), signing config
 assets/icon.svg          App icon source
 scripts/
   android.mjs            Builds the APK / AAB, or opens Android Studio
   android-assets.mjs     Generates launcher icons and splash screens
+  demo.mjs               Runs or builds the web demo (no sign-in)
 src/
   app/
     layout.tsx           Shell: fonts, nav, sign-in gate
@@ -461,6 +500,7 @@ src/
     LoanForm.tsx         Create/edit a loan: currency, plan, schedule, late fee, preview
     EntryForm.tsx        Record a payment, more money lent, a fee or a forgiven amount
     DebtToggle.tsx       "With interest / Without interest" switch and its hook
+    Demo.tsx             Web demo banner and "Load example loans" button
     useLocale.ts         React hook for the current language
     PersonForm.tsx       Edit a person's details
     LoanList.tsx         Loan rows with balance and progress
@@ -479,6 +519,7 @@ src/
     loan-math.test.ts    Tests for the loan engine
     plans.ts             Names and one-line descriptions of plans, rates, late fees
     debt-view.ts         The remembered with/without-interest choice
+    sample-data.ts       Example loans for the web demo
     i18n.ts              Current language and t() translation function
     i18n-es.ts           Spanish translations
     i18n.test.ts         Checks every string has a Spanish translation
@@ -524,6 +565,8 @@ older backups can still be restored.
 | ------ | ------------ |
 | `npm run dev` | Start the dev server |
 | `npm run build` | Static build into `out/` |
+| `npm run demo` | Run the public web demo (no sign-in) locally |
+| `npm run build:demo` | Static build of the web demo (what Vercel deploys) |
 | `npm run lint` | Lint with ESLint |
 | `npm run typecheck` | Type-check with TypeScript |
 | `npm test` | Loan-math tests and the translation check |
@@ -610,6 +653,10 @@ generar el APK.
 **Para generar una versión nueva:** sube `versionCode` en
 `android/app/build.gradle` y ejecuta `npm run android:apk`. El archivo queda en
 `dist/`.
+
+**Versión web de prueba:** hay una demo sin inicio de sesión para quien quiera
+probar la app o colaborar (ver [Public web demo](#public-web-demo)). Los datos
+quedan solo en el navegador de cada persona.
 
 **Novedades de cada versión:** ver el [historial de cambios](CHANGELOG.md).
 

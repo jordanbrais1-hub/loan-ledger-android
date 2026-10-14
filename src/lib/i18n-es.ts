@@ -408,6 +408,17 @@ export const es: Record<string, string> = {
   "Debt with interest": "Deuda con intereses",
   "Debt without interest": "Deuda sin intereses",
 
+  // Public web demo
+  "Demo version": "Versión demo",
+  "No sign-in. What you enter is saved only in this browser.": "Sin inicio de sesión. Lo que ingrese se guarda solo en este navegador.",
+  "View the code and contribute on GitHub": "Vea el código y colabore en GitHub",
+  "Load example loans": "Cargar préstamos de ejemplo",
+  "Example loans added": "Préstamos de ejemplo agregados",
+  "Example: interest only, 20% a month": "Ejemplo: solo intereses, 20 % mensual",
+  "Example: 12 monthly installments": "Ejemplo: 12 cuotas mensuales",
+  "Example: one-time, 20% fixed": "Ejemplo: pago único, 20 % fijo",
+  "Example: money I borrowed, no interest": "Ejemplo: dinero que me prestaron, sin intereses",
+
   // Form errors
   "Please fix the highlighted fields.": "Corrija los campos marcados.",
   "Couldn't save the loan.": "No se pudo guardar el préstamo.",

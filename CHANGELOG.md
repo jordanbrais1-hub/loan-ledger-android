@@ -5,6 +5,21 @@ All notable changes to Loan Ledger. Versions match `versionName` in
 `npm run android:apk` (see the [README](README.md#building-the-android-app)).
 Installing a newer APK over an older one keeps all data on the phone.
 
+## [Unreleased]
+
+### Added
+- **Public web demo** with no sign-in (`NEXT_PUBLIC_DEMO_MODE=true`), for
+  people who want to try the app or contribute. Each visitor's data stays in
+  their own browser. Shows a "Demo version" banner and a **Load example loans**
+  button. Run it with `npm run demo`; build it with `npm run build:demo`.
+- `vercel.json` to deploy the demo on Vercel (static export, security headers),
+  with a preview deployment for every pull request.
+- `CONTRIBUTING.md`, a pull request template and issue templates.
+
+### Security
+- The Android build refuses to run while the demo mode is on, so the
+  no-sign-in mode can't end up in the app.
+
 ## [0.2.2] – 2026-10-14
 
 ### Added

@@ -1,9 +1,20 @@
 "use client";
 
 import { Fragment, createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-import { type Account, devAccount, googleClientId, loadAccount, rememberAccount, signInWithGoogle, signOut } from "@/lib/auth";
+import {
+  type Account,
+  demoAccount,
+  demoMode,
+  devAccount,
+  googleClientId,
+  loadAccount,
+  rememberAccount,
+  signInWithGoogle,
+  signOut,
+} from "@/lib/auth";
 import { closeLedger, openLedger } from "@/lib/db";
 import { LOCALES, localeNames, restoreLocale, setLocale, t } from "@/lib/i18n";
+import { DemoBanner } from "./Demo";
 import { Nav } from "./Nav";
 import { FormError, Loading, buttonClass } from "./ui";
 import { useLocale } from "./useLocale";
@@ -38,7 +49,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
   // Restore the language and the session saved on this device, if any.
   useEffect(() => {
     restoreLocale();
-    const saved = loadAccount();
+    // The public demo has no sign-in: everyone gets a ledger in their own browser.
+    const saved = demoMode ? demoAccount : loadAccount();
     (saved ? openLedger(saved.id) : Promise.resolve()).then(
       () => setAccount(saved),
       (e) => {
@@ -71,6 +83,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   return (
     <AccountContext value={{ account, signOut: handleSignOut }}>
       <Fragment key={locale}>
+        {demoMode && <DemoBanner />}
         <Nav />
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</main>
       </Fragment>

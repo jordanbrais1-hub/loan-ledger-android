@@ -3,8 +3,10 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import Link from "next/link";
 import { DebtToggle, useDebtView } from "@/components/DebtToggle";
+import { SampleDataButton } from "@/components/Demo";
 import { LoanList } from "@/components/LoanList";
 import { Card, EmptyState, Loading, PageHeader, StatCard, buttonClass } from "@/components/ui";
+import { demoMode } from "@/lib/auth";
 import { t } from "@/lib/i18n";
 import { amountLines, amountsSign, formatDate, formatMoney } from "@/lib/format";
 import { getLoans, getRecentPayments, totals } from "@/lib/queries";
@@ -24,9 +26,12 @@ export function DashboardView() {
           title={t("No loans yet")}
           message={t("Add your first loan — money you lent to someone, or money you borrowed. We'll keep track of payments, interest and due dates for you.")}
           action={
-            <Link href="/loans/new" className={buttonClass.primary}>
-              {t("+ Add your first loan")}
-            </Link>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Link href="/loans/new" className={buttonClass.primary}>
+                {t("+ Add your first loan")}
+              </Link>
+              {demoMode && <SampleDataButton />}
+            </div>
           }
         />
       </>

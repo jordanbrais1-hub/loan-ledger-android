@@ -48,6 +48,11 @@ if (!process.env.NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID && !readEnvLocal().includes("N
   console.warn("\n⚠  NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID is not set — Google sign-in will be disabled in this build.\n");
 }
 
+if (process.env.NEXT_PUBLIC_DEMO_MODE === "true" || /^NEXT_PUBLIC_DEMO_MODE=true/m.test(readEnvLocal())) {
+  console.error("\n✖  NEXT_PUBLIC_DEMO_MODE is on. The no-sign-in demo is for the web only; turn it off to build the app.\n");
+  process.exit(1);
+}
+
 run("npx next build");
 run("npx cap sync android");
 

@@ -4,8 +4,10 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useRef, useState } from "react";
 import { useAccount } from "@/components/AuthGate";
 import { ConfirmButton } from "@/components/ConfirmButton";
+import { SampleDataButton } from "@/components/Demo";
 import { Card, FormError, PageHeader, buttonClass } from "@/components/ui";
 import { exportBackup, exportLoansCsv, importBackup } from "@/lib/backup";
+import { demoMode } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { LOCALES, localeNames, setLocale, t } from "@/lib/i18n";
 import { useLocale } from "@/components/useLocale";
@@ -56,9 +58,17 @@ export function SettingsView() {
           )}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-medium">{account.name ?? t("Signed in")}</p>
+          <p className="truncate font-medium">{demoMode ? t("Demo version") : (account.name ?? t("Signed in"))}</p>
+          {demoMode && (
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              {t("No sign-in. What you enter is saved only in this browser.")}
+            </p>
+          )}
           {account.email && <p className="truncate text-sm text-slate-500 dark:text-slate-400">{account.email}</p>}
         </div>
+        {demoMode ? (
+          <SampleDataButton />
+        ) : (
         <ConfirmButton
           action={signOut}
           title={t("Sign out?")}
@@ -68,6 +78,7 @@ export function SettingsView() {
         >
           {t("Sign out")}
         </ConfirmButton>
+        )}
       </Card>
 
       <Card className="flex flex-wrap items-center justify-between gap-3 p-5">

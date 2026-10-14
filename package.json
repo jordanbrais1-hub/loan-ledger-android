@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "demo": "node scripts/demo.mjs dev",
+    "build:demo": "node scripts/demo.mjs build",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "tsc src/lib/loan-math.test.ts src/lib/i18n.test.ts --outDir .test-out --module commonjs --target es2022 --strict --skipLibCheck --esModuleInterop && node --test .test-out/loan-math.test.js .test-out/i18n.test.js",

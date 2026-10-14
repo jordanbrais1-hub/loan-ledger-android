@@ -21,6 +21,13 @@ const STORAGE_KEY = "loan-ledger:account";
 
 export const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? "";
 
+/**
+ * Public web demo (NEXT_PUBLIC_DEMO_MODE=true): no sign-in at all. Each visitor's
+ * ledger lives only in their own browser. Never enabled for the Android app.
+ */
+export const demoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+export const demoAccount: Account = { id: "demo", name: "Demo", email: null, picture: null };
+
 /** Lets `next dev` run without Google credentials. Never offered in a release build. */
 export const devAccount: Account | null =
   process.env.NODE_ENV === "development"

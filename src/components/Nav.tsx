@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { demoMode } from "@/lib/auth";
 import { LOCALES, localeNames, setLocale, t } from "@/lib/i18n";
 import { useAccount } from "./AuthGate";
 import { ConfirmButton } from "./ConfirmButton";
@@ -102,7 +103,7 @@ function ProfileMenu({ highlighted }: { highlighted: boolean }) {
           className="absolute right-0 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg dark:border-slate-800 dark:bg-slate-900"
         >
           <div className="border-b border-slate-200 px-3 pt-1.5 pb-2.5 dark:border-slate-800">
-            <p className="truncate text-sm font-medium">{account.name ?? t("Signed in")}</p>
+            <p className="truncate text-sm font-medium">{demoMode ? t("Demo version") : (account.name ?? t("Signed in"))}</p>
             {account.email && <p className="truncate text-xs text-slate-500 dark:text-slate-400">{account.email}</p>}
           </div>
 
@@ -134,6 +135,7 @@ function ProfileMenu({ highlighted }: { highlighted: boolean }) {
             <span aria-hidden className="w-4" />
             {t("Account & backup")}
           </Link>
+          {!demoMode && (
           <ConfirmButton
             action={signOut}
             title={t("Sign out?")}
@@ -144,6 +146,7 @@ function ProfileMenu({ highlighted }: { highlighted: boolean }) {
             <span aria-hidden className="w-4" />
             {t("Sign out")}
           </ConfirmButton>
+          )}
         </div>
       )}
     </div>

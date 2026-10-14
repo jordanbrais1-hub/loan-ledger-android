@@ -109,7 +109,7 @@ export async function exportLoansCsv() {
   const header = [
     t("Person"), t("Direction"), t("Description"), t("Currency"), t("Amount lent"), t("Plan"), t("Interest rate"),
     t("Loan date"), t("Next due date"), t("Next amount"), t("Due now"), t("Principal left"), t("Interest so far"),
-    t("Fees"), t("Repaid"), t("Payoff today"), t("Status"), t("Notes"),
+    t("Fees"), t("Repaid"), t("Payoff today"), t("Debt with interest"), t("Debt without interest"), t("Status"), t("Notes"),
   ];
   const statusNames = { active: t("Active"), overdue: t("Overdue"), paid: t("Paid off") };
   const rows = loans.map((l) => [
@@ -129,6 +129,8 @@ export async function exportLoansCsv() {
     l.summary.fees.toFixed(2),
     l.summary.paid.toFixed(2),
     l.summary.balance.toFixed(2),
+    l.summary.debtWithInterest.toFixed(2),
+    l.summary.debtWithoutInterest.toFixed(2),
     statusNames[l.summary.status],
     l.notes,
   ]);

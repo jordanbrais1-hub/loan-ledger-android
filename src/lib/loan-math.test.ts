@@ -183,3 +183,54 @@ test("biweekly / semimonthly period rates", () => {
   near(s.schedule![0].interest, 5000, "half a month of 10%");
   assert.equal(s.schedule![1].dueDate, "2026-02-10");
 });
+
+test("whole debt: interest-only 20%/month shows 120,000 until the interest is paid", () => {
+  const t: LoanTerms = { ...base, plan: "interest_only", interest_rate: 20 };
+  let s = summarizeLoan(t, [], "2026-01-10");
+  near(s.debtWithInterest, 120000, "on the loan date");
+  near(s.debtWithoutInterest, 100000, "without interest");
+  s = summarizeLoan(t, [], "2026-02-10");
+  near(s.debtWithInterest, 120000, "on the due date, unpaid");
+  // Pays only the interest: still owes the same 100,000.
+  const e = [pay("2026-02-10", 20000, "interest")];
+  s = summarizeLoan(t, e, "2026-02-10");
+  near(s.debtWithInterest, 100000, "right after paying the interest");
+  near(s.debtWithoutInterest, 100000, "principal unchanged");
+  // Next month's interest counts from the day after.
+  s = summarizeLoan(t, e, "2026-02-11");
+  near(s.debtWithInterest, 120000, "next month");
+  // Unpaid month plus the current one.
+  s = summarizeLoan(t, [], "2026-02-11");
+  near(s.debtWithInterest, 140000, "one month overdue + current month");
+  near(s.debtWithoutInterest, 100000, "without interest, overdue");
+});
+
+test("whole debt: paid in advance, abono a capital, payoff", () => {
+  const t: LoanTerms = { ...base, plan: "interest_only", interest_rate: 20 };
+  let s = summarizeLoan(t, [pay("2026-02-01", 20000)], "2026-02-01");
+  near(s.debtWithInterest, 100000, "interest paid early");
+  near(s.debtWithoutInterest, 100000, "credit doesn't lower the principal");
+  s = summarizeLoan(t, [pay("2026-01-20", 30000, "principal")], "2026-01-20");
+  near(s.debtWithoutInterest, 70000, "abono a capital");
+  s = summarizeLoan(t, [pay("2026-01-20", 120000)], "2026-01-25");
+  assert.equal(s.status, "paid");
+  assert.equal(s.debtWithInterest, 0);
+  assert.equal(s.debtWithoutInterest, 0);
+});
+
+test("whole debt: installments count every installment left", () => {
+  const t: LoanTerms = { ...base, plan: "installments", interest_rate: 10, term: 12 };
+  let s = summarizeLoan(t, [], "2026-01-10");
+  // The last installment absorbs rounding, so allow a few cents.
+  assert.ok(Math.abs(s.debtWithInterest - s.installment! * 12) < 0.1, "all 12 installments");
+  near(s.debtWithoutInterest, 100000, "principal only");
+  s = summarizeLoan(t, [pay("2026-02-10", s.installment!)], "2026-02-10");
+  assert.ok(Math.abs(s.debtWithInterest - s.installment! * 11) < 0.1, "11 left");
+});
+
+test("whole debt: one-time loan counts interest up to the due date", () => {
+  const t: LoanTerms = { ...base, interest_rate: 12, rate_period: "year", due_date: "2026-02-10" };
+  const s = summarizeLoan(t, [], "2026-01-10");
+  near(s.debtWithInterest, 100000 + (100000 * 0.12 * 31) / 365, "principal + 31 days");
+  near(s.debtWithoutInterest, 100000, "principal only");
+});

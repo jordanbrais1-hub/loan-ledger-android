@@ -4,10 +4,12 @@ import { useLiveQuery } from "dexie-react-hooks";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { DebtToggle, useDebtView } from "@/components/DebtToggle";
 import { LoanFilters } from "@/components/LoanFilters";
 import { LoanList } from "@/components/LoanList";
 import { EmptyState, Loading, PageHeader, buttonClass } from "@/components/ui";
 import { exportLoansCsv } from "@/lib/backup";
+import { debtOf, type DebtView } from "@/lib/debt-view";
 import { formatAmounts } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { getLoans, totals } from "@/lib/queries";
@@ -15,7 +17,7 @@ import type { LoanWithSummary } from "@/lib/types";
 
 type Search = { q?: string; status?: string; direction?: string; sort?: string };
 
-function applyFilters(loans: LoanWithSummary[], { q, status, direction, sort }: Search) {
+function applyFilters(loans: LoanWithSummary[], { q, status, direction, sort }: Search, view: DebtView) {
   const needle = q?.trim().toLowerCase();
   const filtered = loans.filter((l) => {
     if (direction && l.direction !== direction) return false;
@@ -29,7 +31,7 @@ function applyFilters(loans: LoanWithSummary[], { q, status, direction, sort }: 
   });
 
   if (sort === "oldest") filtered.reverse();
-  if (sort === "balance") filtered.sort((a, b) => b.summary.balance - a.summary.balance);
+  if (sort === "balance") filtered.sort((a, b) => debtOf(b.summary, view) - debtOf(a.summary, view));
   if (sort === "due") {
     // By the next payment date; paid loans and loans without a due date go last.
     const nextDate = (l: LoanWithSummary) => (l.summary.status === "paid" ? null : l.summary.next?.date) ?? "9999";
@@ -42,11 +44,12 @@ export function LoansView() {
   const params = useSearchParams();
   const allLoans = useLiveQuery(() => getLoans(), []);
   const [exporting, setExporting] = useState(false);
+  const view = useDebtView();
   if (!allLoans) return <Loading />;
 
   const search: Search = Object.fromEntries(params.entries());
-  const loans = applyFilters(allLoans, search);
-  const { owedToMe, iOwe } = totals(loans);
+  const loans = applyFilters(allLoans, search, view);
+  const { owedToMe, iOwe } = totals(loans, view);
 
   return (
     <>
@@ -57,6 +60,8 @@ export function LoansView() {
         }
         actions={
           allLoans.length > 0 && (
+            <>
+            <DebtToggle />
             <button
               type="button"
               className={buttonClass.secondary}
@@ -70,6 +75,7 @@ export function LoansView() {
             >
               {exporting ? t("Exporting…") : t("Export CSV")}
             </button>
+            </>
           )
         }
       />

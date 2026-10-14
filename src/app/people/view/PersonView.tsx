@@ -4,6 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ConfirmButton } from "@/components/ConfirmButton";
+import { DebtToggle, useDebtView } from "@/components/DebtToggle";
 import { LoanList } from "@/components/LoanList";
 import { PersonForm } from "@/components/PersonForm";
 import { Card, Loading, NotFoundState, PageHeader, StatCard, buttonClass } from "@/components/ui";
@@ -16,12 +17,13 @@ import { newLoanHref, parseId } from "@/lib/routes";
 export function PersonView() {
   const id = parseId(useSearchParams().get("id"));
   const router = useRouter();
+  const view = useDebtView();
   const data = useLiveQuery(() => (id ? Promise.all([getPerson(id), getLoans(id)]) : null), [id]);
   if (data === undefined) return <Loading />;
   const [person, loans] = data ?? [null, []];
   if (!person) return <NotFoundState />;
 
-  const { owedToMe, iOwe, net } = totals(loans);
+  const { owedToMe, iOwe, net } = totals(loans, view);
   const netSign = amountsSign(net);
 
   return (
@@ -60,6 +62,7 @@ export function PersonView() {
         }
       />
 
+      <DebtToggle className="mb-3" />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         <StatCard label={t("They owe me")} value={amountLines(owedToMe)} tone="green" />
         <StatCard label={t("I owe them")} value={amountLines(iOwe)} tone="red" />

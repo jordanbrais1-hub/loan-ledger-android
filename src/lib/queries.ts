@@ -1,4 +1,5 @@
 import { db, type LoanRow, type PersonRow } from "./db";
+import { debtOf, type DebtView } from "./debt-view";
 import { zeroAmounts } from "./format";
 import { summarizeLoan } from "./loan-math";
 import type { Loan, LoanWithSummary, Payment, Person } from "./types";
@@ -84,14 +85,15 @@ export async function getPerson(id: number): Promise<Person | null> {
 
 /**
  * Totals across a set of loans, split by direction and kept separate per
- * currency (there's no exchange rate to combine them). Paid-off loans count as zero.
+ * currency (there's no exchange rate to combine them), with or without the
+ * interest the loans carry. Paid-off loans count as zero.
  */
-export function totals(loans: LoanWithSummary[]) {
+export function totals(loans: LoanWithSummary[], view: DebtView) {
   const owedToMe = zeroAmounts();
   const iOwe = zeroAmounts();
   for (const l of loans) {
-    if (l.direction === "lent") owedToMe[l.currency] += l.summary.balance;
-    else iOwe[l.currency] += l.summary.balance;
+    if (l.direction === "lent") owedToMe[l.currency] += debtOf(l.summary, view);
+    else iOwe[l.currency] += debtOf(l.summary, view);
   }
   const net = zeroAmounts();
   for (const c of Object.keys(net) as (keyof typeof net)[]) net[c] = owedToMe[c] - iOwe[c];

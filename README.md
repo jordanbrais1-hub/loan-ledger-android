@@ -58,6 +58,7 @@ Spanish**.
 | **Recording payments** | One tap for the amount due, **interest only**, **pay it all off**, **extra to principal** (abono a capital) or any other amount. Also **lend more** on the same loan, add a **fee**, or **forgive** part of the debt. Every payment shows how it was split. |
 | **Payment schedule** | For periodic loans: each due date with its interest, principal, fees, total and status (paid, part paid, overdue, due, upcoming). |
 | **Two currencies** | Each loan is in colones (₡) or dollars ($). Totals are kept **separately per currency**; the app never converts between them. |
+| **Whole debt, with or without interest** | Each loan shows everything owed as one figure: principal + the interest it carries (e.g. ₡100,000 at 20% a month shows **₡120,000**). A **With interest / Without interest** switch changes every total in the app to principal only, and is remembered. |
 | **Automatic math** | What's due now, the next payment, principal left, interest so far, payoff amount, % repaid and status (**Active**, **Overdue**, **Paid off**). |
 | **English and Spanish** | Switch language from the menu under your profile picture (or on the sign-in screen). The first time, the app follows the phone's language. |
 | **Search and filters** | Search by name, purpose or notes; filter by status and direction; sort by date, due date or balance. |
@@ -184,6 +185,19 @@ If they pay ₡10,000 with **Interest only**, the loan rolls over: they still ow
 ₡100,000 and the next ₡10,000 is due on 14 December. If they also pay ₡20,000
 with **Extra to principal**, the principal drops to ₡80,000 and the next
 month's interest to ₡8,000.
+
+**Whole debt (with interest):** the big number on each loan, and the totals on
+the dashboard, loans and people screens, count the interest the loan carries:
+
+| Plan | With interest | Without interest |
+| ---- | ------------- | ---------------- |
+| Interest only | Principal + this period's unpaid interest (+ any overdue interest and fees) | Principal (+ fees) |
+| Installments | Every installment left (principal + interest) | Principal (+ fees) |
+| One-time | Principal + interest up to the due date (or so far, with no due date) | Principal (+ fees) |
+
+So ₡100,000 at 20% a month shows ₡120,000. When they pay the ₡20,000 of
+interest it shows ₡100,000 again, and the next month's ₡20,000 is added the day
+after its period starts. Money paid in advance is subtracted.
 
 **Example (one-time):** you lend ₡100,000 at 12% per year on 1 January. After 31
 days the interest is 100,000 × 0.01 × 12 / 365 × 31 ≈ ₡1,019.18. If they pay
@@ -351,7 +365,7 @@ that build.
 
 **Installing the APK:** send it to the phone (WhatsApp, Drive, USB…) and open
 it; Android will ask you to allow installing from that source. With USB
-debugging on you can also run `adb install -r dist/LoanLedger-0.2.0.apk`.
+debugging on you can also run `adb install -r dist/LoanLedger-0.2.1.apk`.
 
 ### Create your own signing key
 
@@ -440,6 +454,7 @@ src/
     Nav.tsx              Top navigation and the profile menu (language, backup, sign out)
     LoanForm.tsx         Create/edit a loan: currency, plan, schedule, late fee, preview
     EntryForm.tsx        Record a payment, more money lent, a fee or a forgiven amount
+    DebtToggle.tsx       "With interest / Without interest" switch and its hook
     useLocale.ts         React hook for the current language
     PersonForm.tsx       Edit a person's details
     LoanList.tsx         Loan rows with balance and progress
@@ -457,6 +472,7 @@ src/
     loan-math.ts         Loan engine: interest, schedule, payment allocation, status
     loan-math.test.ts    Tests for the loan engine
     plans.ts             Names and one-line descriptions of plans, rates, late fees
+    debt-view.ts         The remembered with/without-interest choice
     i18n.ts              Current language and t() translation function
     i18n-es.ts           Spanish translations
     i18n.test.ts         Checks every string has a Spanish translation
@@ -572,6 +588,12 @@ abre en español desde el inicio.
    **Plan de pagos** muestra cada fecha y si está pagada o atrasada.
 4. Haz respaldos seguido: toca tu foto de perfil → **Cuenta y respaldo** →
    **Guardar respaldo**, y guarda el archivo en Drive.
+
+**Deuda total:** cada préstamo muestra la deuda completa con intereses (por
+ejemplo, ₡100 000 al 20 % mensual = **₡120 000**). Si pagan los ₡20 000 de
+interés, vuelve a ₡100 000. El interruptor **Con intereses / Sin intereses**
+(en el préstamo, Inicio, Préstamos y Personas) cambia todos los totales para
+ver solo el capital.
 
 **Para dar acceso a otra persona:** agrega su Gmail en Google Cloud Console →
 *Google Auth Platform → Público → Usuarios de prueba*. No hace falta volver a

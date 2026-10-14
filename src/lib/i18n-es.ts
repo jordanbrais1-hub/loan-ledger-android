@@ -112,7 +112,6 @@ export const es: Record<string, string> = {
   "Loan": "Préstamo",
   "due now {amount}": "vence ya {amount}",
   "next {amount}": "próximo {amount}",
-  "of {amount}": "de {amount}",
   "Due today": "Vence hoy",
   "Due tomorrow": "Vence mañana",
   "Due in {n} days": "Vence en {n} días",
@@ -285,8 +284,6 @@ export const es: Record<string, string> = {
   "{interest} interest + {principal} principal": "{interest} de interés + {principal} de capital",
   "interest only": "solo intereses",
   "{amount} already paid in advance": "{amount} ya pagado por adelantado",
-  "They still owe you": "Todavía le deben",
-  "You still owe": "Todavía debe",
   "Payment schedule": "Plan de pagos",
   "Show less": "Mostrar menos",
   "Show all {n}": "Mostrar los {n}",
@@ -390,6 +387,19 @@ export const es: Record<string, string> = {
   "Next amount": "Próximo monto",
   "Due now": "Pendiente hoy",
   "Payoff today": "Para cancelar hoy",
+
+  // Whole debt (with / without interest)
+  "With interest": "Con intereses",
+  "Without interest": "Sin intereses",
+  "with interest": "con intereses",
+  "without interest": "sin intereses",
+  "Show debt": "Mostrar deuda",
+  "They owe you in total": "Le deben en total",
+  "You owe in total": "Usted debe en total",
+  "{principal} principal + {interest} interest": "{principal} de capital + {interest} de intereses",
+  "Plus {interest} of interest": "Más {interest} de intereses",
+  "Debt with interest": "Deuda con intereses",
+  "Debt without interest": "Deuda sin intereses",
 
   // Form errors
   "Please fix the highlighted fields.": "Corrija los campos marcados.",

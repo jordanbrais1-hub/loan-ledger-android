@@ -1,12 +1,17 @@
+"use client";
+
 import Link from "next/link";
+import { debtOf } from "@/lib/debt-view";
 import { describeDue, formatDate, formatMoney } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { planName } from "@/lib/plans";
 import { loanHref } from "@/lib/routes";
 import type { LoanWithSummary } from "@/lib/types";
+import { useDebtView } from "./DebtToggle";
 import { Card, DirectionBadge, ProgressBar, StatusBadge } from "./ui";
 
 export function LoanList({ loans, showPerson = true }: { loans: LoanWithSummary[]; showPerson?: boolean }) {
+  const view = useDebtView();
   return (
     <Card className="divide-y divide-slate-200 overflow-hidden dark:divide-slate-800">
       {loans.map((loan) => {
@@ -44,13 +49,15 @@ export function LoanList({ loans, showPerson = true }: { loans: LoanWithSummary[
               </div>
             </div>
             <div className="shrink-0 text-right">
-              <p className="font-semibold tabular-nums">{formatMoney(s.balance, loan.currency)}</p>
+              <p className="font-semibold tabular-nums">{formatMoney(debtOf(s, view), loan.currency)}</p>
               <p className="text-xs text-slate-500 tabular-nums dark:text-slate-400">
                 {nextAmount !== null && periodic
                   ? s.dueNow > 0.005
                     ? t("due now {amount}", { amount: formatMoney(nextAmount, loan.currency) })
                     : t("next {amount}", { amount: formatMoney(nextAmount, loan.currency) })
-                  : t("of {amount}", { amount: formatMoney(s.totalDue, loan.currency) })}
+                  : view === "with"
+                    ? t("with interest")
+                    : t("without interest")}
               </p>
             </div>
           </Link>

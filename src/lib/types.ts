@@ -162,6 +162,10 @@ export interface LoanSummary {
   totalDue: number;
   /** Same as `payoff`, never negative: what is still owed. */
   balance: number;
+  /** Everything owed as a whole: principal + fees + the interest it carries (see summarizeLoan). */
+  debtWithInterest: number;
+  /** Principal + fees still owed, leaving out interest. */
+  debtWithoutInterest: number;
   progress: number;
   status: LoanStatus;
   /** Days until the next due date; negative when overdue. */

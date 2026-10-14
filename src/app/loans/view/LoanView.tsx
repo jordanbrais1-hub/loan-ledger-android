@@ -5,11 +5,14 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { ConfirmButton } from "@/components/ConfirmButton";
+import { DebtToggle, useDebtView } from "@/components/DebtToggle";
 import { EntryForm } from "@/components/EntryForm";
 import { Card, DirectionBadge, Loading, NotFoundState, ProgressBar, StatusBadge, buttonClass } from "@/components/ui";
 import { deleteLoan, deletePayment } from "@/lib/actions";
+import { debtOf } from "@/lib/debt-view";
 import { describeDue, formatDate, formatMoney } from "@/lib/format";
 import { t } from "@/lib/i18n";
+import { round2 } from "@/lib/loan-math";
 import { describeLateFee, describePlan, describeRate } from "@/lib/plans";
 import { getLoan, getPayments } from "@/lib/queries";
 import { editLoanHref, parseId, personHref } from "@/lib/routes";
@@ -144,66 +147,102 @@ export function LoanView() {
   );
 }
 
-/** The most useful number first: what's due now, otherwise the next payment, otherwise what's still owed. */
+/** The whole debt first (with or without interest), then what's due now or next. */
 function Headline({ loan }: { loan: LoanWithSummary }) {
   const s = loan.summary;
+  const view = useDebtView();
   const money = (n: number) => formatMoney(n, loan.currency);
   const lent = loan.direction === "lent";
   const tone = (good: boolean) => (good ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400");
-  const big = "mt-1 text-4xl font-semibold tabular-nums";
+  const debt = debtOf(s, view);
+  const interestPart = round2(s.debtWithInterest - s.debtWithoutInterest);
 
   if (s.status === "paid") {
     return (
       <>
         <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{t("Fully paid")}</p>
-        <p className={`${big} ${tone(true)}`}>{money(0)}</p>
+        <p className={`mt-1 text-4xl font-semibold tabular-nums ${tone(true)}`}>{money(0)}</p>
       </>
     );
   }
 
-  const periodic = loan.plan !== "single";
-  if (periodic && s.dueNow > 0.005) {
-    return (
-      <>
+  return (
+    <>
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-          {s.overdue > 0.005 ? (lent ? t("Overdue — they owe now") : t("Overdue — you owe now")) : t("Due today")}
+          {lent ? t("They owe you in total") : t("You owe in total")}
         </p>
-        <p className={`${big} ${s.overdue > 0.005 ? "text-amber-600 dark:text-amber-400" : tone(lent)}`}>{money(s.dueNow)}</p>
+        <DebtToggle />
+      </div>
+      <p className={`mt-1 text-4xl font-semibold tabular-nums ${tone(lent)}`}>{money(debt)}</p>
+      {interestPart > 0.005 && (
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          {view === "with"
+            ? t("{principal} principal + {interest} interest", {
+                principal: money(s.debtWithoutInterest),
+                interest: money(interestPart),
+              })
+            : t("Plus {interest} of interest", { interest: money(interestPart) })}
+        </p>
+      )}
+      <DueNotice loan={loan} />
+    </>
+  );
+}
+
+/** What's due now (or overdue), otherwise the next payment or the due date. */
+function DueNotice({ loan }: { loan: LoanWithSummary }) {
+  const s = loan.summary;
+  const money = (n: number) => formatMoney(n, loan.currency);
+  const lent = loan.direction === "lent";
+  const periodic = loan.plan !== "single";
+  const box = "mt-4 rounded-lg px-3 py-2 text-sm";
+
+  if (periodic && s.dueNow > 0.005) {
+    const late = s.overdue > 0.005;
+    return (
+      <div
+        className={`${box} ${
+          late
+            ? "bg-amber-50 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200"
+            : "bg-indigo-50 text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-200"
+        }`}
+      >
+        <p className="font-medium">
+          {late ? (lent ? t("Overdue — they owe now") : t("Overdue — you owe now")) : t("Due today")}:{" "}
+          <span className="tabular-nums">{money(s.dueNow)}</span>
+        </p>
+        <p className="mt-0.5 text-xs opacity-80">
           {s.periodsBehind > 1 ? `${t("{n} payments behind", { n: s.periodsBehind })} · ` : ""}
           {describeDue(s.daysUntilDue)} · {t("{amount} to pay it all off", { amount: money(s.balance) })}
         </p>
-      </>
+      </div>
     );
   }
   if (periodic && s.next) {
     return (
-      <>
-        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{t("Next payment")} · {formatDate(s.next.date)}</p>
-        <p className={`${big} ${tone(lent)}`}>{money(s.next.amount)}</p>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+      <div className={`${box} bg-slate-50 text-slate-700 dark:bg-slate-800/60 dark:text-slate-200`}>
+        <p className="font-medium">
+          {t("Next payment")} · {formatDate(s.next.date)}: <span className="tabular-nums">{money(s.next.amount)}</span>
+        </p>
+        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
           {describeDue(s.daysUntilDue)}
           {s.next.principal > 0.005
             ? ` · ${t("{interest} interest + {principal} principal", { interest: money(s.next.interest), principal: money(s.next.principal) })}`
             : ` · ${t("interest only")}`}
           {s.credit > 0.005 ? ` · ${t("{amount} already paid in advance", { amount: money(s.credit) })}` : ""}
         </p>
-      </>
+      </div>
     );
   }
   const due = describeDue(s.daysUntilDue);
+  if (!due) return null;
   return (
-    <>
-      <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{lent ? t("They still owe you") : t("You still owe")}</p>
-      <p className={`${big} ${tone(lent)}`}>{money(s.balance)}</p>
-      {due && (
-        <p
-          className={`mt-1 text-sm ${s.status === "overdue" ? "font-medium text-amber-700 dark:text-amber-400" : "text-slate-500 dark:text-slate-400"}`}
-        >
-          {due} ({formatDate(loan.due_date)})
-        </p>
-      )}
-    </>
+    <p
+      className={`mt-2 text-sm ${s.status === "overdue" ? "font-medium text-amber-700 dark:text-amber-400" : "text-slate-500 dark:text-slate-400"}`}
+    >
+      {due} ({formatDate(loan.due_date)})
+    </p>
   );
 }
 

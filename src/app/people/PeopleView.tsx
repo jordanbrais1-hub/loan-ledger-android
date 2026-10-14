@@ -3,6 +3,7 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import Link from "next/link";
 import { Card, EmptyState, Loading, PageHeader, buttonClass } from "@/components/ui";
+import { DebtToggle, useDebtView } from "@/components/DebtToggle";
 import { amountLines, amountsSign } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { getLoans, getPeople, totals } from "@/lib/queries";
@@ -10,6 +11,7 @@ import { personHref } from "@/lib/routes";
 
 export function PeopleView() {
   const data = useLiveQuery(() => Promise.all([getPeople(), getLoans()]), []);
+  const view = useDebtView();
   if (!data) return <Loading />;
   const [people, loans] = data;
 
@@ -33,13 +35,17 @@ export function PeopleView() {
   const rows = people.map((person) => {
     const theirLoans = loans.filter((l) => l.person_id === person.id);
     const open = theirLoans.filter((l) => l.summary.status !== "paid");
-    const { net } = totals(theirLoans);
+    const { net } = totals(theirLoans, view);
     return { person, net, sign: amountsSign(net), loanCount: theirLoans.length, openCount: open.length };
   });
 
   return (
     <>
-      <PageHeader title={t("People")} subtitle={t("Everyone you lend to or borrow from, and where you stand with each.")} />
+      <PageHeader
+        title={t("People")}
+        subtitle={t("Everyone you lend to or borrow from, and where you stand with each.")}
+        actions={<DebtToggle />}
+      />
       <Card className="divide-y divide-slate-200 overflow-hidden dark:divide-slate-800">
         {rows.map(({ person, net, sign, loanCount, openCount }) => (
           <Link

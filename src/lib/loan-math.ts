@@ -453,6 +453,26 @@ export function summarizeLoan(terms: LoanTerms, entries: Entry[], asOf: string =
     }
   }
 
+  // --- The whole debt: principal plus the interest it's carrying ---
+  // Interest-only: this period's interest (once a period's due date has passed, the
+  // next one's). Installments: the interest of every installment left. One-time:
+  // interest up to the due date.
+  let pendingInterest = interestDue;
+  if (!done && P > EPS) {
+    if (terms.plan === "installments") {
+      pendingInterest += (schedule ?? []).filter((r) => r.status === "upcoming").reduce((sum, r) => sum + r.interest, 0);
+    } else if (periodic) {
+      const chargedToday = k > 1 && dueOf(k - 1) === asOf;
+      if (!chargedToday) pendingInterest += fullPeriodInterest();
+    } else if (terms.due_date && terms.due_date > asOf) {
+      pendingInterest += P * rate * daysBetween(asOf, terms.due_date);
+    }
+  }
+  pendingInterest = round2(pendingInterest);
+  const debtWithInterest = done ? 0 : Math.max(0, round2(P + feesDue + pendingInterest - credit));
+  // Money paid in advance covers interest first, so only what's beyond it lowers the principal.
+  const debtWithoutInterest = done ? 0 : Math.max(0, round2(P + feesDue - Math.max(0, credit - pendingInterest)));
+
   const interest = round2(interestCharged + (periodic ? accruing : 0));
   const totalDue = round2(lent + interest + feesCharged - waived);
   return {
@@ -474,6 +494,8 @@ export function summarizeLoan(terms: LoanTerms, entries: Entry[], asOf: string =
     paid,
     totalDue,
     balance,
+    debtWithInterest,
+    debtWithoutInterest,
     progress: done ? 1 : paid + balance > 0 ? Math.min(1, paid / (paid + balance)) : 0,
     status,
     daysUntilDue,

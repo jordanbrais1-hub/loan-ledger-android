@@ -2,6 +2,7 @@
 
 import { useLiveQuery } from "dexie-react-hooks";
 import Link from "next/link";
+import { DebtToggle, useDebtView } from "@/components/DebtToggle";
 import { LoanList } from "@/components/LoanList";
 import { Card, EmptyState, Loading, PageHeader, StatCard, buttonClass } from "@/components/ui";
 import { t } from "@/lib/i18n";
@@ -11,6 +12,7 @@ import { loanHref } from "@/lib/routes";
 
 export function DashboardView() {
   const data = useLiveQuery(() => Promise.all([getLoans(), getRecentPayments(6)]), []);
+  const view = useDebtView();
   if (!data) return <Loading />;
   const [loans, recentPayments] = data;
 
@@ -31,7 +33,7 @@ export function DashboardView() {
     );
   }
 
-  const { owedToMe, iOwe, net } = totals(loans);
+  const { owedToMe, iOwe, net } = totals(loans, view);
   const netSign = amountsSign(net);
   const open = loans.filter((l) => l.summary.status !== "paid");
   const overdue = open.filter((l) => l.summary.status === "overdue");
@@ -41,7 +43,7 @@ export function DashboardView() {
 
   return (
     <>
-      <PageHeader title={t("Dashboard")} subtitle={t("Where you stand right now.")} />
+      <PageHeader title={t("Dashboard")} subtitle={t("Where you stand right now.")} actions={<DebtToggle />} />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard label={t("Owed to me")} value={amountLines(owedToMe)} tone="green" />

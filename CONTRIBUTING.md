@@ -5,8 +5,7 @@ welcome. *Las contribuciones en español también son bienvenidas.*
 
 ## Try it
 
-- **Web demo** (no sign-in, nothing to install): see the link in the
-  [README](README.md#public-web-demo). Use **Load example loans** to start with
+- **Web demo** (no sign-in, nothing to install): **<https://loanledgerdemo.netlify.app/>**. Use **Load example loans** to start with
   some data. Everything you enter stays in your own browser.
 - **Locally:**
 

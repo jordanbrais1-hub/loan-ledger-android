@@ -14,8 +14,11 @@ Spanish**.
 > TypeScript**, **Tailwind CSS 4**, **Dexie (IndexedDB)**, **Zod** and
 > **Capacitor 8**.
 
+**▶ Try it in your browser: [loanledgerdemo.netlify.app](https://loanledgerdemo.netlify.app/)**
+(demo version, no sign-in; your data stays in your browser).
+
 What's new in each version: see the [changelog](CHANGELOG.md). Want to help?
-Try the [public web demo](#public-web-demo) and read [CONTRIBUTING.md](CONTRIBUTING.md).
+Read [CONTRIBUTING.md](CONTRIBUTING.md).
 
 > [!IMPORTANT]
 > This repository contains **no credentials**. To run or build it you must
@@ -239,7 +242,8 @@ The app is written in English with a full Spanish (Costa Rica) translation.
 ## Public web demo
 
 Besides the Android app, the same code builds a **web demo with no sign-in**,
-for people who want to try the app or help develop it.
+for people who want to try the app or help develop it. It's live at
+**<https://loanledgerdemo.netlify.app/>**, deployed on Netlify from `main`.
 
 | | Android app (clients) | Web demo (public) |
 | - | --- | --- |
@@ -265,8 +269,8 @@ publish `out/`) and adds security headers. Once:
 3. Leave the build settings as they are (they come from `netlify.toml`) and
    click **Deploy**. No environment variables are needed.
 4. Optionally rename the site (**Project configuration → Change project
-   name**) and copy its URL (e.g. `https://loan-ledger-demo.netlify.app`) into
-   this README and the repository's **About → Website** field.
+   name**) and copy its URL into this README and the repository's
+   **About → Website** field.
 
 Every push to `main` redeploys the demo, and every pull request gets a
 **Deploy Preview** link.
@@ -673,7 +677,7 @@ generar el APK.
 `dist/`.
 
 **Versión web de prueba:** hay una demo sin inicio de sesión para quien quiera
-probar la app o colaborar (ver [Public web demo](#public-web-demo)). Los datos
+probar la app o colaborar: **<https://loanledgerdemo.netlify.app/>** (ver [Public web demo](#public-web-demo)). Los datos
 quedan solo en el navegador de cada persona.
 
 **Novedades de cada versión:** ver el [historial de cambios](CHANGELOG.md).

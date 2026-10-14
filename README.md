@@ -53,7 +53,7 @@ Spanish**.
 | **Loans** | Add, edit and delete loans in either direction ("I lent money" / "I borrowed money"), with currency, amount, date, interest rate, purpose and notes. |
 | **Repayment plans** | **One-time repayment** (optional due date), **Interest only** (pay the interest each period; the loan rolls over until the principal is repaid) or **Installments** (equal payments of interest + principal). See [Repayment plans and payments](#repayment-plans-and-payments). |
 | **Flexible schedules** | Monthly, twice a month (quincenal: e.g. the 15th and 30th), every 2 weeks or weekly; a chosen first payment date; a fixed number of payments or open-ended. |
-| **Interest rates** | Quoted **per month** (common for personal loans) or **per year**. Installment interest on the remaining balance (amortized) or on the original amount (flat). |
+| **Interest rates** | Quoted **per month** (common for personal loans), **per year**, or, for one-time loans, a **fixed %** charged once (e.g. 20% → ₡100,000 becomes ₡120,000, however long it takes). Installment interest on the remaining balance (amortized) or on the original amount (flat). |
 | **Late fees and early payoff** | Optional late fee (fixed amount or % of what's late) after a number of grace days; choose whether paying off early charges the whole period's interest or only the days used. |
 | **Recording payments** | One tap for the amount due, **interest only**, **pay it all off**, **extra to principal** (abono a capital) or any other amount. Also **lend more** on the same loan, add a **fee**, or **forgive** part of the debt. Every payment shows how it was split. |
 | **Payment schedule** | For periodic loans: each due date with its interest, principal, fees, total and status (paid, part paid, overdue, due, upcoming). |
@@ -110,7 +110,7 @@ When you create a loan, pick how it will be repaid:
 
 | Plan | How it works | Typical use |
 | ---- | ------------ | ----------- |
-| **One-time repayment** | Interest builds up day by day; they repay whenever they can (all at once or bit by bit), optionally by a due date. | Informal loans between family and friends. |
+| **One-time repayment** | Interest builds up day by day, or is a **fixed %** of the amount lent charged once; they repay whenever they can (all at once or bit by bit), optionally by a due date. | Informal loans between family and friends; "I lend you ₡100,000 at 20%, you return ₡120,000". |
 | **Interest only** | Each period (e.g. each month) the interest is due. Paying **only the interest** rolls the loan over to the next period; the principal is repaid whenever they can, or with the last payment if you set a number of payments. | "I lend you ₡100,000 at 10% a month: pay me ₡10,000 every month until you return the ₡100,000." |
 | **Installments** | A fixed number of equal payments that cover interest and principal (French amortization), or flat interest on the original amount. | Loans repaid in cuotas over a set time. |
 
@@ -157,6 +157,9 @@ checks it (`npm test`).
   (÷ 12).
 - **One-time loans:** interest per day = monthly rate × 12 / 365. Everything is
   due on the due date.
+- **Fixed % (one-time loans only):** the % of the amount lent is charged once,
+  on the loan date (and on any extra amount lent, when it's lent). It doesn't
+  grow with time; payments cover it first.
 - **Periodic loans:** each period's interest is charged on its due date. The
   rate per period is the monthly rate × 12 / periods per year (12 monthly, 24
   twice a month, 26 every 2 weeks, 52 weekly). A first period that's longer or
@@ -193,7 +196,7 @@ the dashboard, loans and people screens, count the interest the loan carries:
 | ---- | ------------- | ---------------- |
 | Interest only | Principal + this period's unpaid interest (+ any overdue interest and fees) | Principal (+ fees) |
 | Installments | Every installment left (principal + interest) | Principal (+ fees) |
-| One-time | Principal + interest up to the due date (or so far, with no due date) | Principal (+ fees) |
+| One-time | Principal + interest up to the due date (or so far, with no due date); with a fixed %, principal + that interest | Principal (+ fees) |
 
 So ₡100,000 at 20% a month shows ₡120,000. When they pay the ₡20,000 of
 interest it shows ₡100,000 again, and the next month's ₡20,000 is added the day
@@ -365,7 +368,7 @@ that build.
 
 **Installing the APK:** send it to the phone (WhatsApp, Drive, USB…) and open
 it; Android will ask you to allow installing from that source. With USB
-debugging on you can also run `adb install -r dist/LoanLedger-0.2.1.apk`.
+debugging on you can also run `adb install -r dist/LoanLedger-0.2.2.apk`.
 
 ### Create your own signing key
 
@@ -495,7 +498,7 @@ Each account's IndexedDB database has three tables (`src/lib/db.ts`). Dates are
 | Table | Fields |
 | ----- | ------ |
 | `people` | `id`, `name`, `name_lower` (unique, for case-insensitive matching), `phone`, `email`, `notes`, `created_at` |
-| `loans` | `id`, `person_id`, `direction` (`lent` / `borrowed`), `currency` (`CRC` / `USD`), `principal`, `interest_rate`, `rate_period` (`month` / `year`), `plan` (`single` / `interest_only` / `installments`), `start_date`, `due_date` (single plan), `frequency` (`monthly` / `semimonthly` / `biweekly` / `weekly`), `first_due_date`, `term` (number of payments, or null for open-ended), `amortization` (`declining` / `flat`), `late_fee_type` (`none` / `fixed` / `percent`), `late_fee_value`, `grace_days`, `early_payoff` (`full_period` / `prorated`), `description`, `notes`, `created_at`, `updated_at` |
+| `loans` | `id`, `person_id`, `direction` (`lent` / `borrowed`), `currency` (`CRC` / `USD`), `principal`, `interest_rate`, `rate_period` (`month` / `year` / `flat` = fixed %, one-time loans only), `plan` (`single` / `interest_only` / `installments`), `start_date`, `due_date` (single plan), `frequency` (`monthly` / `semimonthly` / `biweekly` / `weekly`), `first_due_date`, `term` (number of payments, or null for open-ended), `amortization` (`declining` / `flat`), `late_fee_type` (`none` / `fixed` / `percent`), `late_fee_value`, `grace_days`, `early_payoff` (`full_period` / `prorated`), `description`, `notes`, `created_at`, `updated_at` |
 | `payments` | Every record on a loan: `id`, `loan_id`, `kind` (`payment` / `disbursement` = lent more / `fee` / `waiver` = forgiven), `allocation` for payments (`auto` / `interest` / `principal`), `amount` (same currency as its loan), `paid_on`, `method`, `note`, `created_at` |
 
 **Schema versions:**
@@ -574,7 +577,9 @@ abre en español desde el inicio.
    estar en la lista de *usuarios de prueba*).
 2. **+ Nuevo préstamo**: elige si prestaste o te prestaron, la persona, la
    moneda (**₡ CRC** o **$ USD**), el monto y **cómo se va a pagar**:
-   - **Pago único:** se paga cuando se pueda, con fecha de pago opcional.
+   - **Pago único:** se paga cuando se pueda, con fecha de pago opcional. La
+     tasa puede ser mensual, anual o un **% fijo (una vez)**: ₡100 000 al 20 %
+     fijo = ₡120 000, sin importar cuánto tarden.
    - **Solo intereses:** cada mes (o quincena, o semana) se pagan los
      intereses y el préstamo se renueva hasta que devuelvan el capital. Ejemplo:
      ₡100 000 al **10 % mensual** = ₡10 000 de interés cada mes.

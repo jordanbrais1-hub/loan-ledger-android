@@ -241,6 +241,13 @@ export const es: Record<string, string> = {
   "No interest": "Sin intereses",
   "{rate}% per month": "{rate}% mensual",
   "{rate}% per year": "{rate}% anual",
+  "{rate}% fixed (charged once)": "{rate}% fijo (se cobra una vez)",
+  "% fixed (once)": "% fijo (una vez)",
+  "Charged once on the amount lent, however long it takes to repay.":
+    "Se cobra una sola vez sobre lo prestado, sin importar cuánto tarden en pagar.",
+  "{interest} of interest, charged once: {total} to repay in total.":
+    "{interest} de interés, cobrado una sola vez: {total} a pagar en total.",
+  "A fixed % only works with a one-time repayment": "El % fijo solo aplica a préstamos de pago único",
   "Interest only, {freq}, until repaid": "Solo intereses, {freq}, hasta que se pague",
   "Interest only, {freq}, for 1 payment": "Solo intereses, {freq}, por 1 pago",
   "Interest only, {freq}, for {n} payments": "Solo intereses, {freq}, por {n} pagos",

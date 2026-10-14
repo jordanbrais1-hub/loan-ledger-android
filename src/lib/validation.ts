@@ -80,6 +80,9 @@ export const loanSchema = z
       issue("firstDueDate", t("The first payment must be after the loan date"));
     }
     if (d.plan === "installments" && !d.term) issue("term", t("How many payments?"));
+    if (d.plan !== "single" && d.ratePeriod === "flat") {
+      issue("ratePeriod", t("A fixed % only works with a one-time repayment"));
+    }
     if (d.lateFeeType !== "none" && !d.lateFeeValue) issue("lateFeeValue", t("Enter the late fee"));
     if (d.lateFeeType === "percent" && (d.lateFeeValue ?? 0) > 100) issue("lateFeeValue", t("At most 100%"));
   });

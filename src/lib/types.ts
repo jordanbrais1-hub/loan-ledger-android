@@ -17,8 +17,11 @@ export type Plan = (typeof PLANS)[number];
 export const FREQUENCIES = ["monthly", "semimonthly", "biweekly", "weekly"] as const;
 export type Frequency = (typeof FREQUENCIES)[number];
 
-/** What the interest rate is quoted per. */
-export const RATE_PERIODS = ["month", "year"] as const;
+/**
+ * What the interest rate is quoted per. `flat` is a fixed % of the amount lent,
+ * charged once however long it takes (one-time repayment loans only).
+ */
+export const RATE_PERIODS = ["month", "year", "flat"] as const;
 export type RatePeriod = (typeof RATE_PERIODS)[number];
 
 /** Installment interest: on the remaining balance (amortized), or on the original amount every period. */

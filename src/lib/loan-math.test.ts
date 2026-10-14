@@ -234,3 +234,24 @@ test("whole debt: one-time loan counts interest up to the due date", () => {
   near(s.debtWithInterest, 100000 + (100000 * 0.12 * 31) / 365, "principal + 31 days");
   near(s.debtWithoutInterest, 100000, "principal only");
 });
+
+test("one-time loan at a fixed 20%: charged once, not per day", () => {
+  const t: LoanTerms = { ...base, interest_rate: 20, rate_period: "flat" };
+  let s = summarizeLoan(t, [], "2026-01-10");
+  near(s.debtWithInterest, 120000, "120,000 on day one");
+  near(s.balance, 120000, "payoff on day one");
+  near(s.debtWithoutInterest, 100000, "without interest");
+  s = summarizeLoan(t, [], "2026-06-10");
+  near(s.debtWithInterest, 120000, "doesn't grow with time");
+  // Paying 20,000 covers the interest; the 100,000 is still owed.
+  const e = [pay("2026-02-10", 20000)];
+  s = summarizeLoan(t, e, "2026-03-10");
+  near(s.effects[e[0].id].interest, 20000, "goes to interest first");
+  near(s.debtWithInterest, 100000, "still owes the 100,000");
+  // Lending 50,000 more adds 20% of it.
+  s = summarizeLoan(t, [...e, pay("2026-03-01", 50000, "auto", "disbursement")], "2026-03-10");
+  near(s.debtWithInterest, 160000, "100,000 + 50,000 + 10,000");
+  // Paid in full.
+  s = summarizeLoan(t, [pay("2026-04-01", 120000)], "2026-05-01");
+  assert.equal(s.status, "paid");
+});

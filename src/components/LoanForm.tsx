@@ -8,7 +8,7 @@ import { addPeriods, todayISO } from "@/lib/dates";
 import { CURRENCIES, DEFAULT_CURRENCY, currencyName, formatDate, formatMoney, type Currency } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { installmentPlan, monthlyRate, periodRate } from "@/lib/loan-math";
-import { frequencyName, periodNoun, planDetail, planName } from "@/lib/plans";
+import { frequencyName, periodNoun, planDetail, planName, ratePeriodName } from "@/lib/plans";
 import { loanHref } from "@/lib/routes";
 import {
   FREQUENCIES,
@@ -75,7 +75,8 @@ export function LoanForm({
 
   const choosePlan = (next: Plan) => {
     setPlan(next);
-    if (!loan && next !== "single" && plan === "single") setRatePeriod("month");
+    // A fixed % only exists for one-time loans; periodic loans are usually quoted per month.
+    if (next !== "single" && (ratePeriod === "flat" || (!loan && plan === "single"))) setRatePeriod("month");
   };
 
   return (
@@ -209,8 +210,12 @@ export function LoanForm({
           <Field
             label={t("Interest rate")}
             htmlFor="interestRate"
-            hint={t("Leave at 0 for an interest-free loan.")}
-            errors={errors.interestRate}
+            hint={
+              ratePeriod === "flat"
+                ? t("Charged once on the amount lent, however long it takes to repay.")
+                : t("Leave at 0 for an interest-free loan.")
+            }
+            errors={errors.interestRate ?? errors.ratePeriod}
           >
             <div className="flex gap-2">
               <input
@@ -231,8 +236,9 @@ export function LoanForm({
                 onChange={(e) => setRatePeriod(e.target.value as RatePeriod)}
                 className={narrowInput}
               >
-                <option value="month">{t("% per month")}</option>
-                <option value="year">{t("% per year")}</option>
+                <option value="month">{ratePeriodName("month")}</option>
+                <option value="year">{ratePeriodName("year")}</option>
+                {!periodic && <option value="flat">{ratePeriodName("flat")}</option>}
               </select>
             </div>
           </Field>
@@ -462,7 +468,15 @@ function PlanPreview({
   const r = periodRate(rate, ratePeriod, frequency);
   let text: string | null = null;
 
-  if (plan === "single") {
+  if (plan === "single" && ratePeriod === "flat") {
+    if (rate > 0) {
+      const interest = principal * (rate / 100);
+      text = t("{interest} of interest, charged once: {total} to repay in total.", {
+        interest: money(interest),
+        total: money(principal + interest),
+      });
+    }
+  } else if (plan === "single") {
     if (rate > 0) {
       text = t("About {amount} of interest per month while it's unpaid.", {
         amount: money(principal * monthlyRate(rate, ratePeriod)),

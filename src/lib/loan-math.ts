@@ -16,8 +16,9 @@ const EPS = 0.005;
 /** Periods per year, used to turn a monthly rate into a per-period rate. */
 const PERIODS_PER_YEAR: Record<Frequency, number> = { monthly: 12, semimonthly: 24, biweekly: 26, weekly: 52 };
 
-/** The rate as a fraction per month (5% per year → 0.05 / 12). */
+/** The rate as a fraction per month (5% per year → 0.05 / 12). A flat rate doesn't grow with time: 0. */
 export function monthlyRate(rate: number, ratePeriod: RatePeriod): number {
+  if (ratePeriod === "flat") return 0;
   return rate / 100 / (ratePeriod === "year" ? 12 : 1);
 }
 
@@ -142,6 +143,21 @@ export function summarizeLoan(terms: LoanTerms, entries: Entry[], asOf: string =
   /** The base interest is charged on: the original amount for flat installments within the term. */
   const interestBase = () => (flat && (!term || k <= term) ? terms.principal : P);
 
+  /** One-time loans at a flat rate: the interest on money lent is charged once, when it's lent. */
+  const flatRate = !periodic && terms.rate_period === "flat" ? terms.interest_rate / 100 : 0;
+  function chargeFlatInterest(amountLent: number) {
+    const interest = round2(amountLent * flatRate);
+    if (interest <= EPS) return;
+    let bucket = buckets.find((b) => b.type === "interest");
+    if (!bucket) {
+      bucket = { period: 1, due: terms.due_date ?? terms.start_date, type: "interest", amount: 0, remaining: 0 };
+      buckets.push(bucket);
+    }
+    bucket.amount = round2(bucket.amount + interest);
+    bucket.remaining = round2(bucket.remaining + interest);
+    interestCharged += interest;
+  }
+
   function accrueTo(date: string) {
     if (date <= cursor) return;
     if (!closed && P > EPS) {
@@ -233,6 +249,7 @@ export function summarizeLoan(terms: LoanTerms, entries: Entry[], asOf: string =
       P = round2(P + amount);
       lent = round2(lent + amount);
       effect.principal = amount;
+      chargeFlatInterest(amount);
       return;
     }
     if (e.kind === "fee") {
@@ -329,6 +346,7 @@ export function summarizeLoan(terms: LoanTerms, entries: Entry[], asOf: string =
   // Initial disbursement.
   P = round2(terms.principal);
   lent = P;
+  chargeFlatInterest(P);
   if (!periodic && terms.due_date && terms.late_fee_type !== "none") {
     lateChecks.push({ date: addDays(terms.due_date, terms.grace_days + 1), period: 1 });
   }

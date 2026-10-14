@@ -68,11 +68,12 @@ function paymentCount(n: number | null, frequency: Frequency): string {
 }
 
 export function ratePeriodName(period: RatePeriod): string {
-  return period === "month" ? t("% per month") : t("% per year");
+  return period === "month" ? t("% per month") : period === "year" ? t("% per year") : t("% fixed (once)");
 }
 
 export function describeRate(loan: Pick<Loan, "interest_rate" | "rate_period">): string {
   if (!(loan.interest_rate > 0)) return t("No interest");
+  if (loan.rate_period === "flat") return t("{rate}% fixed (charged once)", { rate: loan.interest_rate });
   return loan.rate_period === "month"
     ? t("{rate}% per month", { rate: loan.interest_rate })
     : t("{rate}% per year", { rate: loan.interest_rate });

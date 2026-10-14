@@ -14,6 +14,8 @@ Spanish**.
 > TypeScript**, **Tailwind CSS 4**, **Dexie (IndexedDB)**, **Zod** and
 > **Capacitor 8**.
 
+What's new in each version: see the [changelog](CHANGELOG.md).
+
 > [!IMPORTANT]
 > This repository contains **no credentials**. To run or build it you must
 > create your **own** Google OAuth clients, your **own** `.env.local` and your
@@ -411,7 +413,8 @@ launcher icons and splash screens.
 3. `npm run check`
 4. `npm run android:apk`
 5. Install it over the old version. Data on the phone is kept.
-6. Commit and tag: `git tag v0.3.0 && git push --tags`.
+6. Add the changes to [`CHANGELOG.md`](CHANGELOG.md).
+7. Commit and tag: `git tag v0.3.0 && git push --tags`.
 
 ---
 
@@ -607,6 +610,8 @@ generar el APK.
 **Para generar una versión nueva:** sube `versionCode` en
 `android/app/build.gradle` y ejecuta `npm run android:apk`. El archivo queda en
 `dist/`.
+
+**Novedades de cada versión:** ver el [historial de cambios](CHANGELOG.md).
 
 **Importante:** guarda en un lugar seguro `android/keystore/` y
 `android/keystore.properties`. No están en el repositorio y sin ellos no se

@@ -5,7 +5,10 @@ you lend and borrow. It is an **offline Android app**: every record is stored on
 the phone, nothing is sent to a server, and you sign in with Google so each
 person gets their own private ledger.
 
-Loans can be in **Costa Rican colones (₡ CRC)** or **US dollars ($ USD)**.
+Loans can be in **Costa Rican colones (₡ CRC)** or **US dollars ($ USD)**, and
+can be one-time loans, **monthly interest-only loans** that roll over each
+month, or **installment loans**. The app is available in **English and
+Spanish**.
 
 > Built with **Next.js 16 (App Router, static export)**, **React 19 +
 > TypeScript**, **Tailwind CSS 4**, **Dexie (IndexedDB)**, **Zod** and
@@ -22,21 +25,23 @@ Loans can be in **Costa Rican colones (₡ CRC)** or **US dollars ($ USD)**.
 
 1. [Features](#features)
 2. [How it works](#how-it-works)
-3. [How the money math works](#how-the-money-math-works)
-4. [Security and configuration](#security-and-configuration)
-5. [Getting started (development)](#getting-started-development)
-6. [Configuration](#configuration)
-7. [Google sign-in setup](#google-sign-in-setup)
-8. [Building the Android app](#building-the-android-app)
-9. [Releasing a new version](#releasing-a-new-version)
-10. [Backups and moving to a new phone](#backups-and-moving-to-a-new-phone)
-11. [Project structure](#project-structure)
-12. [Data model](#data-model)
-13. [Scripts](#scripts)
-14. [Troubleshooting](#troubleshooting)
-15. [Privacy and security](#privacy-and-security)
-16. [Guía rápida en español](#guía-rápida-en-español)
-17. [License](#license)
+3. [Repayment plans and payments](#repayment-plans-and-payments)
+4. [How the money math works](#how-the-money-math-works)
+5. [Languages](#languages)
+6. [Security and configuration](#security-and-configuration)
+7. [Getting started (development)](#getting-started-development)
+8. [Configuration](#configuration)
+9. [Google sign-in setup](#google-sign-in-setup)
+10. [Building the Android app](#building-the-android-app)
+11. [Releasing a new version](#releasing-a-new-version)
+12. [Backups and moving to a new phone](#backups-and-moving-to-a-new-phone)
+13. [Project structure](#project-structure)
+14. [Data model](#data-model)
+15. [Scripts](#scripts)
+16. [Troubleshooting](#troubleshooting)
+17. [Privacy and security](#privacy-and-security)
+18. [Guía rápida en español](#guía-rápida-en-español)
+19. [License](#license)
 
 ---
 
@@ -45,10 +50,16 @@ Loans can be in **Costa Rican colones (₡ CRC)** or **US dollars ($ USD)**.
 | Area | What you get |
 | ---- | ------------ |
 | **Dashboard** | How much you're owed, how much you owe, your net position, the number of open loans, loans that are overdue or due within 7 days, and recent payments. |
-| **Loans** | Add, edit and delete loans in either direction ("I lent money" / "I borrowed money"), with currency, amount, date, optional due date, optional interest rate, purpose and notes. |
+| **Loans** | Add, edit and delete loans in either direction ("I lent money" / "I borrowed money"), with currency, amount, date, interest rate, purpose and notes. |
+| **Repayment plans** | **One-time repayment** (optional due date), **Interest only** (pay the interest each period; the loan rolls over until the principal is repaid) or **Installments** (equal payments of interest + principal). See [Repayment plans and payments](#repayment-plans-and-payments). |
+| **Flexible schedules** | Monthly, twice a month (quincenal: e.g. the 15th and 30th), every 2 weeks or weekly; a chosen first payment date; a fixed number of payments or open-ended. |
+| **Interest rates** | Quoted **per month** (common for personal loans) or **per year**. Installment interest on the remaining balance (amortized) or on the original amount (flat). |
+| **Late fees and early payoff** | Optional late fee (fixed amount or % of what's late) after a number of grace days; choose whether paying off early charges the whole period's interest or only the days used. |
+| **Recording payments** | One tap for the amount due, **interest only**, **pay it all off**, **extra to principal** (abono a capital) or any other amount. Also **lend more** on the same loan, add a **fee**, or **forgive** part of the debt. Every payment shows how it was split. |
+| **Payment schedule** | For periodic loans: each due date with its interest, principal, fees, total and status (paid, part paid, overdue, due, upcoming). |
 | **Two currencies** | Each loan is in colones (₡) or dollars ($). Totals are kept **separately per currency**; the app never converts between them. |
-| **Payments** | Record partial or full repayments (the **Full** button fills in the remaining balance), with date, method and note. Remove a payment if it was a mistake; the balance is recalculated. |
-| **Automatic math** | Balance, interest so far, total to repay, % repaid and status (**Active**, **Overdue**, **Paid off**). |
+| **Automatic math** | What's due now, the next payment, principal left, interest so far, payoff amount, % repaid and status (**Active**, **Overdue**, **Paid off**). |
+| **English and Spanish** | Switch language from the menu under your profile picture (or on the sign-in screen). The first time, the app follows the phone's language. |
 | **Search and filters** | Search by name, purpose or notes; filter by status and direction; sort by date, due date or balance. |
 | **People** | Everyone you deal with and where you stand with each. A person is created the first time you type their name on a loan. Store a phone, email and notes for each. |
 | **Google sign-in** | Needs a connection once; afterwards the app opens offline. Each Google account gets its own separate ledger on the device. |
@@ -92,25 +103,115 @@ Loans can be in **Costa Rican colones (₡ CRC)** or **US dollars ($ USD)**.
 
 ---
 
+## Repayment plans and payments
+
+When you create a loan, pick how it will be repaid:
+
+| Plan | How it works | Typical use |
+| ---- | ------------ | ----------- |
+| **One-time repayment** | Interest builds up day by day; they repay whenever they can (all at once or bit by bit), optionally by a due date. | Informal loans between family and friends. |
+| **Interest only** | Each period (e.g. each month) the interest is due. Paying **only the interest** rolls the loan over to the next period; the principal is repaid whenever they can, or with the last payment if you set a number of payments. | "I lend you ₡100,000 at 10% a month: pay me ₡10,000 every month until you return the ₡100,000." |
+| **Installments** | A fixed number of equal payments that cover interest and principal (French amortization), or flat interest on the original amount. | Loans repaid in cuotas over a set time. |
+
+Periodic plans (interest only and installments) can be **monthly**, **twice a
+month** (the start day and 15 days later, e.g. the 15th and the 30th), **every
+2 weeks** or **weekly**. The first payment defaults to one period after the
+loan date, and can be changed.
+
+**More options** (per loan):
+- **Late fee (mora):** none, a fixed amount, or a % of what's late. It's charged
+  once for each payment still unpaid after the **grace days**.
+- **If they pay it all off early:** charge the whole period's interest, or only
+  the days used (prorated).
+
+**On the loan page, under Record:**
+
+| Tab | Option | What it does |
+| --- | ------ | ------------ |
+| Payment | **Amount due / Installment due** | Covers everything due now (including overdue periods and fees). |
+| Payment | **Next payment** | Paying ahead of time: the money is kept as credit and used on the next due date. |
+| Payment | **Interest only** | Pays only the interest. The principal stays owed and the loan continues to the next period. |
+| Payment | **Pay it all off** | Pays everything owed today and closes the loan. |
+| Payment | **Extra to principal** | Abono a capital: goes straight to the principal, so future interest goes down. |
+| Payment | **Other amount** | Pays what's due first; anything extra is kept for the next payment and the rest lowers the principal. |
+| Lend more | | Adds to the principal of the same loan (not for installment loans). |
+| Fee | | Adds an extra charge by hand, due right away. |
+| Forgive | | Cancels part of the debt without a payment: fees first, then interest, then principal. |
+
+Each record in the **History** shows how it was applied, for example
+`₡10,000.00 interest + ₡5,000.00 principal`. Removing a record recalculates
+everything.
+
+---
+
 ## How the money math works
 
-All of it lives in `src/lib/loan-math.ts`.
+All of it lives in `src/lib/loan-math.ts`, and `src/lib/loan-math.test.ts`
+checks it (`npm test`).
 
-- Interest is **simple annual interest** (it doesn't compound) on the principal
-  that is still owed, and it builds up **day by day** (`rate / 365` per day).
-- Payments are applied in date order. Each payment pays the interest owed so far
-  first, then the principal.
-- Once a loan is fully repaid, no more interest is added.
-- Set the rate to **0** for an interest-free loan.
-- A loan is **Overdue** when it has a balance and its due date has passed.
+- The loan is worked out by **replaying its history in date order**: the money
+  lent, each payment, fee, extra amount lent and amount forgiven.
+- Interest is **simple** (it doesn't compound) and builds up **day by day** on
+  the principal still owed. A rate per year is first turned into a monthly rate
+  (÷ 12).
+- **One-time loans:** interest per day = monthly rate × 12 / 365. Everything is
+  due on the due date.
+- **Periodic loans:** each period's interest is charged on its due date. The
+  rate per period is the monthly rate × 12 / periods per year (12 monthly, 24
+  twice a month, 26 every 2 weeks, 52 weekly). A first period that's longer or
+  shorter than normal is charged in proportion to its days.
+- **Installments** use the standard amortization formula
+  `P × r / (1 − (1 + r)^−n)`, or, for flat interest, `P / n + P × r` each
+  period.
+- **Payments clear the oldest charges first:** fees, then interest, then
+  principal that is due. Money paid before anything is due is held as
+  **credit** for the next charge; anything beyond the next charge lowers the
+  principal. If a payment covers everything owed, the loan is paid off.
+- **Interest only** payments only touch interest; **extra to principal** only
+  touches principal.
+- **Late fees** are charged once per period that's still unpaid
+  `grace days` after its due date.
+- A loan is **Overdue** when something past its due date is still unpaid.
+- Once a loan is fully repaid, no more interest is added. Set the rate to **0**
+  for an interest-free loan.
 - Totals (dashboard, loan list, people) are **summed per currency**. If you have
   loans in both currencies you'll see two figures, for example
   `₡150,000.00` and `-$200.00`.
 
-**Example:** you lend ₡100,000 at 12% per year on 1 January. After 31 days the
-interest is 100,000 × 0.12 / 365 × 31 ≈ ₡1,019.18. If they pay ₡20,000 that
-day, ₡1,019.18 covers the interest and ₡18,980.82 reduces the principal to
-₡81,019.18. From then on, interest builds up on ₡81,019.18.
+**Example (interest only):** you lend ₡100,000 at **10% per month** on
+14 October, with monthly payments. On 14 November ₡10,000 of interest is due.
+If they pay ₡10,000 with **Interest only**, the loan rolls over: they still owe
+₡100,000 and the next ₡10,000 is due on 14 December. If they also pay ₡20,000
+with **Extra to principal**, the principal drops to ₡80,000 and the next
+month's interest to ₡8,000.
+
+**Example (one-time):** you lend ₡100,000 at 12% per year on 1 January. After 31
+days the interest is 100,000 × 0.01 × 12 / 365 × 31 ≈ ₡1,019.18. If they pay
+₡20,000 that day, ₡1,019.18 covers the interest and ₡18,980.82 reduces the
+principal to ₡81,019.18.
+
+---
+
+## Languages
+
+The app is written in English with a full Spanish (Costa Rica) translation.
+
+- **Switching:** tap your **profile picture** (top right) → **Language /
+  Idioma**, or use the switch on the sign-in screen or in **Account & backup**.
+  The choice is saved on the phone. The first time, the app uses Spanish if the
+  phone is set to Spanish.
+- **Formatting follows the language:** in Spanish, amounts and dates look like
+  `₡100 000,00` and `14 nov 2026`.
+- **How it works:** every piece of text goes through `t("English text")` from
+  `src/lib/i18n.ts`, with `{placeholders}` for values:
+  `t("Due in {n} days", { n })`. `src/lib/i18n-es.ts` maps each English string
+  to Spanish. Missing translations fall back to English.
+- **Adding or changing text:** write the English inside `t("…")` (always a
+  plain string literal), then add the Spanish to `i18n-es.ts`. `npm test` fails
+  if any string is missing a translation, if a translation is no longer used, or
+  if it uses a placeholder the English doesn't have.
+- **Adding a language:** add it to `LOCALES`, `localeNames`, `dictionaries` and
+  `intlLocales` in `i18n.ts`, with a new dictionary file like `i18n-es.ts`.
 
 ---
 
@@ -167,7 +268,7 @@ it. The skipped sign-in uses a separate local ledger (`loan-ledger-dev-local`).
 Before committing, run:
 
 ```bash
-npm run check   # type-check + ESLint + static build, in one go
+npm run check   # type-check + ESLint + tests + static build, in one go
 ```
 
 > **Note:** this project uses a recent Next.js release with breaking changes.
@@ -186,10 +287,10 @@ app), so rebuild after changing them. `.env.local` is git-ignored; copy
 | -------- | ------- | ------- |
 | `NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID` | `1234…apps.googleusercontent.com` | OAuth **Web application** client ID. Required for Google sign-in, on Android too. |
 | `NEXT_PUBLIC_CURRENCY` | `CRC` | Currency pre-selected for new loans: `CRC` or `USD`. Defaults to `CRC`. |
-| `NEXT_PUBLIC_LOCALE` | `en-US` | Locale used to format numbers and dates (BCP 47). |
+| `NEXT_PUBLIC_LOCALE` | `en-US` | Locale used to format numbers and dates when the app is in English (BCP 47). In Spanish it's always `es-CR`. |
 
-**Adding another currency:** add its ISO code to `CURRENCIES` (and a label to
-`currencyNames`) in `src/lib/format.ts`. Everything else, including validation,
+**Adding another currency:** add its ISO code to `CURRENCIES` (and a label in
+`currencyName`) in `src/lib/format.ts`. Everything else, including validation,
 backups and totals, picks it up from there.
 
 ---
@@ -250,7 +351,7 @@ that build.
 
 **Installing the APK:** send it to the phone (WhatsApp, Drive, USB…) and open
 it; Android will ask you to allow installing from that source. With USB
-debugging on you can also run `adb install -r dist/LoanLedger-0.1.0.apk`.
+debugging on you can also run `adb install -r dist/LoanLedger-0.2.0.apk`.
 
 ### Create your own signing key
 
@@ -293,7 +394,7 @@ launcher icons and splash screens.
 3. `npm run check`
 4. `npm run android:apk`
 5. Install it over the old version. Data on the phone is kept.
-6. Commit and tag: `git tag v0.2.0 && git push --tags`.
+6. Commit and tag: `git tag v0.3.0 && git push --tags`.
 
 ---
 
@@ -301,16 +402,17 @@ launcher icons and splash screens.
 
 Data lives only on the phone, so **back up regularly**:
 
-1. Tap your **profile circle** (top right) to open **Account & backup**, then
+1. Tap your **profile picture** (top right) → **Account & backup**, then
    **Save a backup**. Save the JSON file to Google Drive, email it to yourself,
    etc.
 2. On the new phone, install the app, sign in with the **same** Google account,
    then **Account & backup → Restore from backup…**, pick the file and confirm
    **Replace my ledger**.
 
-Restoring **replaces** everything in that account's ledger. Backups made before
-loans had a currency are still accepted; those loans come back in the default
-currency.
+Restoring **replaces** everything in that account's ledger. Older backups are
+still accepted: loans saved before currencies existed come back in the default
+currency, and loans saved before repayment plans existed come back as
+one-time loans with a yearly rate, exactly as they worked before.
 
 ---
 
@@ -330,14 +432,15 @@ src/
     page.tsx             Dashboard (DashboardView.tsx)
     loans/               List with filters, new, view?id=, edit?id=
     people/              List and view?id=
-    settings/            Account, sign out, backup/restore, CSV export
+    settings/            Account, language, sign out, backup/restore, CSV export
     error.tsx            Error screen
     not-found.tsx        404 screen
   components/
-    AuthGate.tsx         Sign-in screen; opens the account's ledger
-    Nav.tsx              Top navigation
-    LoanForm.tsx         Create/edit a loan (incl. currency picker)
-    PaymentForm.tsx      Record a payment
+    AuthGate.tsx         Sign-in screen; opens the account's ledger; applies the language
+    Nav.tsx              Top navigation and the profile menu (language, backup, sign out)
+    LoanForm.tsx         Create/edit a loan: currency, plan, schedule, late fee, preview
+    EntryForm.tsx        Record a payment, more money lent, a fee or a forgiven amount
+    useLocale.ts         React hook for the current language
     PersonForm.tsx       Edit a person's details
     LoanList.tsx         Loan rows with balance and progress
     LoanFilters.tsx      Search, status/direction tabs, sort
@@ -351,9 +454,14 @@ src/
     auth.ts              Google sign-in and the remembered session
     backup.ts            Backup/restore (JSON) and CSV export
     files.ts             Saving/sharing files (Android share sheet or download)
-    loan-math.ts         Balance / interest / status calculation
+    loan-math.ts         Loan engine: interest, schedule, payment allocation, status
+    loan-math.test.ts    Tests for the loan engine
+    plans.ts             Names and one-line descriptions of plans, rates, late fees
+    i18n.ts              Current language and t() translation function
+    i18n-es.ts           Spanish translations
+    i18n.test.ts         Checks every string has a Spanish translation
     validation.ts        Form validation (Zod)
-    format.ts            Currencies, money and date formatting
+    format.ts            Currencies, money and date formatting (per language)
     dates.ts             Date helpers (YYYY-MM-DD strings)
     routes.ts            URL helpers (?id= routes)
     types.ts             Shared types
@@ -371,12 +479,15 @@ Each account's IndexedDB database has three tables (`src/lib/db.ts`). Dates are
 | Table | Fields |
 | ----- | ------ |
 | `people` | `id`, `name`, `name_lower` (unique, for case-insensitive matching), `phone`, `email`, `notes`, `created_at` |
-| `loans` | `id`, `person_id`, `direction` (`lent` / `borrowed`), `currency` (`CRC` / `USD`), `principal`, `interest_rate` (% per year), `start_date`, `due_date`, `description`, `notes`, `created_at`, `updated_at` |
-| `payments` | `id`, `loan_id`, `amount` (same currency as its loan), `paid_on`, `method`, `note`, `created_at` |
+| `loans` | `id`, `person_id`, `direction` (`lent` / `borrowed`), `currency` (`CRC` / `USD`), `principal`, `interest_rate`, `rate_period` (`month` / `year`), `plan` (`single` / `interest_only` / `installments`), `start_date`, `due_date` (single plan), `frequency` (`monthly` / `semimonthly` / `biweekly` / `weekly`), `first_due_date`, `term` (number of payments, or null for open-ended), `amortization` (`declining` / `flat`), `late_fee_type` (`none` / `fixed` / `percent`), `late_fee_value`, `grace_days`, `early_payoff` (`full_period` / `prorated`), `description`, `notes`, `created_at`, `updated_at` |
+| `payments` | Every record on a loan: `id`, `loan_id`, `kind` (`payment` / `disbursement` = lent more / `fee` / `waiver` = forgiven), `allocation` for payments (`auto` / `interest` / `principal`), `amount` (same currency as its loan), `paid_on`, `method`, `note`, `created_at` |
 
 **Schema versions:**
 - v1: initial tables.
 - v2: adds `loans.currency`; existing loans get the default currency.
+- v3: adds repayment plans and record kinds. Existing loans become one-time
+  loans with a yearly rate (unchanged behaviour); existing payments become
+  `kind: payment`, `allocation: auto`.
 
 To change the schema, add a new `db.version(n)` with an `upgrade` in
 `createLedger()`. Never edit an old version, because phones already have it.
@@ -393,7 +504,8 @@ older backups can still be restored.
 | `npm run build` | Static build into `out/` |
 | `npm run lint` | Lint with ESLint |
 | `npm run typecheck` | Type-check with TypeScript |
-| `npm run check` | Type-check, lint and build (run before committing) |
+| `npm test` | Loan-math tests and the translation check |
+| `npm run check` | Type-check, lint, test and build (run before committing) |
 | `npm run android:apk` | Build a signed, installable APK into `dist/` |
 | `npm run android:bundle` | Build a signed App Bundle for Google Play |
 | `npm run android:open` | Sync and open the project in Android Studio |
@@ -437,15 +549,29 @@ older backups can still be restored.
 
 ## Guía rápida en español
 
+**Idioma:** la app está en español e inglés. Toca tu foto de perfil (arriba a
+la derecha) → **Idioma** → **Español**. Si el teléfono está en español, la app
+abre en español desde el inicio.
+
 **Para usar la app**
 1. Instala el APK en el teléfono y entra con tu cuenta de Google (tiene que
    estar en la lista de *usuarios de prueba*).
-2. **+ New loan**: elige si prestaste (*I lent*) o te prestaron (*I borrowed*),
-   la persona, la moneda (**₡ CRC** o **$ USD**) y el monto.
-3. Dentro del préstamo, en **Record a payment**, anota cada abono. **Full**
-   rellena el saldo completo.
-4. Haz respaldos seguido: toca el círculo de tu perfil (arriba a la derecha) →
-   **Save a backup**, y guarda el archivo en Drive.
+2. **+ Nuevo préstamo**: elige si prestaste o te prestaron, la persona, la
+   moneda (**₡ CRC** o **$ USD**), el monto y **cómo se va a pagar**:
+   - **Pago único:** se paga cuando se pueda, con fecha de pago opcional.
+   - **Solo intereses:** cada mes (o quincena, o semana) se pagan los
+     intereses y el préstamo se renueva hasta que devuelvan el capital. Ejemplo:
+     ₡100 000 al **10 % mensual** = ₡10 000 de interés cada mes.
+   - **Cuotas:** pagos iguales de interés + capital durante un plazo fijo.
+   - En **Más opciones** se configura el **recargo por mora** (monto fijo o %,
+     con días de gracia) y qué interés cobrar si cancelan antes de tiempo.
+3. Dentro del préstamo, en **Registrar**, anota cada movimiento con un toque:
+   **Monto pendiente**, **Solo intereses** (el préstamo pasa al mes siguiente),
+   **Cancelar todo**, **Abono a capital** u **Otro monto**. También puedes
+   **Prestar más**, agregar un **Recargo** o **Condonar** parte de la deuda. El
+   **Plan de pagos** muestra cada fecha y si está pagada o atrasada.
+4. Haz respaldos seguido: toca tu foto de perfil → **Cuenta y respaldo** →
+   **Guardar respaldo**, y guarda el archivo en Drive.
 
 **Para dar acceso a otra persona:** agrega su Gmail en Google Cloud Console →
 *Google Auth Platform → Público → Usuarios de prueba*. No hace falta volver a

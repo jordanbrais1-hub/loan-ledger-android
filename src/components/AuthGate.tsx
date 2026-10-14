@@ -1,10 +1,12 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { Fragment, createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { type Account, devAccount, googleClientId, loadAccount, rememberAccount, signInWithGoogle, signOut } from "@/lib/auth";
 import { closeLedger, openLedger } from "@/lib/db";
+import { LOCALES, localeNames, restoreLocale, setLocale, t } from "@/lib/i18n";
 import { Nav } from "./Nav";
 import { FormError, Loading, buttonClass } from "./ui";
+import { useLocale } from "./useLocale";
 
 const AccountContext = createContext<{ account: Account; signOut: () => Promise<void> } | null>(null);
 
@@ -19,6 +21,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
   // undefined = still checking the device for a saved session; null = signed out.
   const [account, setAccount] = useState<Account | null | undefined>(undefined);
   const [error, setError] = useState<string>();
+  // Everything below is rebuilt when the language changes, so every screen re-reads its text.
+  const locale = useLocale();
 
   /** Opens the account's ledger, then lets the app render. */
   const enter = useCallback(async (next: Account | null) => {
@@ -27,18 +31,19 @@ export function AuthGate({ children }: { children: ReactNode }) {
       setAccount(next);
     } catch (e) {
       console.error(e);
-      setError("Couldn't open your ledger on this device.");
+      setError(t("Couldn't open your ledger on this device."));
     }
   }, []);
 
-  // Restore the session saved on this device, if any.
+  // Restore the language and the session saved on this device, if any.
   useEffect(() => {
+    restoreLocale();
     const saved = loadAccount();
     (saved ? openLedger(saved.id) : Promise.resolve()).then(
       () => setAccount(saved),
       (e) => {
         console.error(e);
-        setError("Couldn't open your ledger on this device.");
+        setError(t("Couldn't open your ledger on this device."));
       },
     );
   }, []);
@@ -54,6 +59,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (!account) {
     return (
       <SignIn
+        key={locale}
         onSignedIn={(a) => {
           rememberAccount(a);
           return enter(a);
@@ -64,8 +70,10 @@ export function AuthGate({ children }: { children: ReactNode }) {
 
   return (
     <AccountContext value={{ account, signOut: handleSignOut }}>
-      <Nav />
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</main>
+      <Fragment key={locale}>
+        <Nav />
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</main>
+      </Fragment>
     </AccountContext>
   );
 }
@@ -84,7 +92,7 @@ function SignIn({ onSignedIn }: { onSignedIn: (account: Account) => Promise<void
       const message = e instanceof Error ? e.message : String(e);
       // Closing the account picker isn't an error worth shouting about.
       if (!/cancel/i.test(message)) {
-        setError(navigator.onLine ? message : "You're offline. Connect to the internet once to sign in.");
+        setError(navigator.onLine ? message : t("You're offline. Connect to the internet once to sign in."));
       }
     } finally {
       setPending(false);
@@ -99,7 +107,7 @@ function SignIn({ onSignedIn }: { onSignedIn: (account: Account) => Promise<void
         </span>
         <h1 className="mt-5 text-2xl font-semibold tracking-tight">Loan Ledger</h1>
         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-          Keep track of money you lend and borrow. Your ledger is stored privately on this device and works offline.
+          {t("Keep track of money you lend and borrow. Your ledger is stored privately on this device and works offline.")}
         </p>
 
         <div className="mt-8 space-y-3 text-left">
@@ -111,24 +119,50 @@ function SignIn({ onSignedIn }: { onSignedIn: (account: Account) => Promise<void
             className={`${buttonClass.secondary} w-full py-2.5`}
           >
             <GoogleIcon />
-            {pending ? "Signing in…" : "Continue with Google"}
+            {pending ? t("Signing in…") : t("Continue with Google")}
           </button>
           {!googleClientId && (
             <p className="text-center text-xs text-amber-700 dark:text-amber-400">
-              Google sign-in isn&apos;t configured yet (NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID).
+              {t("Google sign-in isn't configured yet (NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID).")}
             </p>
           )}
           {devAccount && (
             <button type="button" onClick={() => onSignedIn(devAccount!)} className={`${buttonClass.ghostDanger} w-full`}>
-              Skip sign-in (development only)
+              {t("Skip sign-in (development only)")}
             </button>
           )}
         </div>
         <p className="mt-6 text-xs text-slate-400 dark:text-slate-500">
-          You only need a connection the first time you sign in.
+          {t("You only need a connection the first time you sign in.")}
         </p>
+        <LanguageSwitch />
       </div>
     </main>
+  );
+}
+
+/** Lets someone pick the language before signing in. */
+function LanguageSwitch() {
+  const locale = useLocale();
+  return (
+    <div className="mt-6 flex justify-center gap-1 text-xs" role="group" aria-label={t("Language")}>
+      {LOCALES.map((l) => (
+        <button
+          key={l}
+          type="button"
+          lang={l}
+          aria-pressed={locale === l}
+          onClick={() => setLocale(l)}
+          className={`rounded-md px-2.5 py-1 font-medium ${
+            locale === l
+              ? "bg-slate-200 text-slate-900 dark:bg-slate-800 dark:text-white"
+              : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+          }`}
+        >
+          {localeNames[l]}
+        </button>
+      ))}
+    </div>
   );
 }
 

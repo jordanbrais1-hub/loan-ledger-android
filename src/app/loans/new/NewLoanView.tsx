@@ -4,6 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useSearchParams } from "next/navigation";
 import { LoanForm } from "@/components/LoanForm";
 import { Loading, PageHeader } from "@/components/ui";
+import { t } from "@/lib/i18n";
 import { getPeople } from "@/lib/queries";
 
 export function NewLoanView() {
@@ -13,7 +14,11 @@ export function NewLoanView() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <PageHeader title="New loan" subtitle="Write it down once — we'll do the math." back={{ href: "/loans", label: "Loans" }} />
+      <PageHeader
+        title={t("New loan")}
+        subtitle={t("Write it down once — we'll do the math.")}
+        back={{ href: "/loans", label: t("Loans") }}
+      />
       <LoanForm peopleNames={people.map((p) => p.name)} defaultPerson={person} />
     </div>
   );

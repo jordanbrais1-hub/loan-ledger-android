@@ -17,6 +17,8 @@ const eslintConfig = defineConfig([
     "dist/**",
     // Previous server version, kept for reference only.
     "legacy-web/**",
+    // Compiled tests.
+    ".test-out/**",
   ]),
 ]);
 

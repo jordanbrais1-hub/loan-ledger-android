@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { t } from "@/lib/i18n";
 import type { Direction, LoanStatus } from "@/lib/types";
 
 export const inputClass =
@@ -103,14 +104,15 @@ const statusStyles: Record<LoanStatus, string> = {
   overdue: "bg-amber-50 text-amber-800 ring-amber-600/30 dark:bg-amber-950/60 dark:text-amber-300",
   paid: "bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-950/60 dark:text-emerald-300",
 };
-const statusLabels: Record<LoanStatus, string> = { active: "Active", overdue: "Overdue", paid: "Paid off" };
+const statusLabel = (status: LoanStatus) =>
+  status === "active" ? t("Active") : status === "overdue" ? t("Overdue") : t("Paid off");
 
 export function StatusBadge({ status }: { status: LoanStatus }) {
   return (
     <span
       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${statusStyles[status]}`}
     >
-      {statusLabels[status]}
+      {statusLabel(status)}
     </span>
   );
 }
@@ -119,12 +121,12 @@ export function DirectionBadge({ direction }: { direction: Direction }) {
   return direction === "lent" ? (
     <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">
       <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-      They owe me
+      {t("They owe me")}
     </span>
   ) : (
     <span className="inline-flex items-center gap-1 text-xs font-medium text-rose-700 dark:text-rose-400">
       <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-      I owe them
+      {t("I owe them")}
     </span>
   );
 }
@@ -212,7 +214,7 @@ export function Loading() {
   return (
     <div role="status" className="flex flex-1 items-center justify-center py-16 text-sm text-slate-500 dark:text-slate-400">
       <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-indigo-600" aria-hidden />
-      Loading…
+      {t("Loading…")}
     </div>
   );
 }
@@ -220,11 +222,11 @@ export function Loading() {
 export function NotFoundState() {
   return (
     <EmptyState
-      title="Not found"
-      message="That loan or person doesn't exist. It may have been deleted."
+      title={t("Not found")}
+      message={t("That loan or person doesn't exist. It may have been deleted.")}
       action={
         <Link href="/" className={buttonClass.primary}>
-          Back to dashboard
+          {t("Back to dashboard")}
         </Link>
       }
     />

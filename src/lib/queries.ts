@@ -5,16 +5,12 @@ import type { Loan, LoanWithSummary, Payment, Person } from "./types";
 
 const toPerson = ({ id, name, phone, email, notes }: PersonRow): Person => ({ id, name, phone, email, notes });
 
-const toPayment = ({ id, loan_id, amount, paid_on, method, note }: Payment): Payment => ({
-  id, loan_id, amount, paid_on, method, note,
+const toPayment = ({ id, loan_id, kind, allocation, amount, paid_on, method, note }: Payment): Payment => ({
+  id, loan_id, kind, allocation, amount, paid_on, method, note,
 });
 
 function toLoan(row: LoanRow, personName: string): Loan {
-  const { id, person_id, direction, currency, principal, interest_rate, start_date, due_date, description, notes, created_at } = row;
-  return {
-    id, person_id, person_name: personName, direction, currency, principal, interest_rate,
-    start_date, due_date, description, notes, created_at,
-  };
+  return { ...row, person_name: personName };
 }
 
 /** Newest loans first, matching the old `ORDER BY start_date DESC, id DESC`. */

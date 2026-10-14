@@ -4,6 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useSearchParams } from "next/navigation";
 import { LoanForm } from "@/components/LoanForm";
 import { Loading, NotFoundState, PageHeader } from "@/components/ui";
+import { t } from "@/lib/i18n";
 import { getLoan, getPeople } from "@/lib/queries";
 import { loanHref, parseId } from "@/lib/routes";
 
@@ -16,7 +17,7 @@ export function EditLoanView() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <PageHeader title="Edit loan" back={{ href: loanHref(loan.id), label: "Back to loan" }} />
+      <PageHeader title={t("Edit loan")} back={{ href: loanHref(loan.id), label: t("Back to loan") }} />
       <LoanForm key={loan.id} loan={loan} peopleNames={people.map((p) => p.name)} />
     </div>
   );

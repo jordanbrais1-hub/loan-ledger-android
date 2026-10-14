@@ -9,6 +9,7 @@ import { PersonForm } from "@/components/PersonForm";
 import { Card, Loading, NotFoundState, PageHeader, StatCard, buttonClass } from "@/components/ui";
 import { deletePerson } from "@/lib/actions";
 import { amountLines, amountsSign, formatAmounts } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { getLoans, getPerson, totals } from "@/lib/queries";
 import { newLoanHref, parseId } from "@/lib/routes";
 
@@ -27,48 +28,51 @@ export function PersonView() {
     <>
       <PageHeader
         title={person.name}
-        back={{ href: "/people", label: "People" }}
+        back={{ href: "/people", label: t("People") }}
         subtitle={
           netSign > 0
-            ? `${person.name} owes you ${formatAmounts(net)} overall`
+            ? t("{name} owes you {amount} overall", { name: person.name, amount: formatAmounts(net) })
             : netSign < 0
-              ? `You owe ${person.name} ${formatAmounts(net, { abs: true })} overall`
+              ? t("You owe {name} {amount} overall", { name: person.name, amount: formatAmounts(net, { abs: true }) })
               : amountLines(net).length > 1
-                ? `Net per currency: ${formatAmounts(net)}`
-                : "You're all settled up"
+                ? t("Net per currency: {amount}", { amount: formatAmounts(net) })
+                : t("You're all settled up")
         }
         actions={
           <>
             <Link href={newLoanHref(person.name)} className={buttonClass.primary}>
-              + New loan
+              {t("+ New loan")}
             </Link>
             <ConfirmButton
               action={async () => {
                 router.push("/people");
                 await deletePerson(person.id);
               }}
-              title={`Delete ${person.name}?`}
-              message={`This permanently deletes ${person.name} and all ${loans.length} of their loans and payments.`}
+              title={t("Delete {name}?", { name: person.name })}
+              message={t("This permanently deletes {name} and all {n} of their loans and payments.", {
+                name: person.name,
+                n: loans.length,
+              })}
             >
-              Delete
+              {t("Delete")}
             </ConfirmButton>
           </>
         }
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-        <StatCard label="They owe me" value={amountLines(owedToMe)} tone="green" />
-        <StatCard label="I owe them" value={amountLines(iOwe)} tone="red" />
-        <StatCard label="Net" value={amountLines(net)} tone={netSign > 0 ? "green" : netSign < 0 ? "red" : "neutral"} />
+        <StatCard label={t("They owe me")} value={amountLines(owedToMe)} tone="green" />
+        <StatCard label={t("I owe them")} value={amountLines(iOwe)} tone="red" />
+        <StatCard label={t("Net")} value={amountLines(net)} tone={netSign > 0 ? "green" : netSign < 0 ? "red" : "neutral"} />
       </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
         <section>
-          <h2 className="mb-3 text-lg font-semibold">Loans</h2>
+          <h2 className="mb-3 text-lg font-semibold">{t("Loans")}</h2>
           {loans.length ? (
             <LoanList loans={loans} showPerson={false} />
           ) : (
-            <Card className="p-5 text-sm text-slate-500 dark:text-slate-400">No loans with {person.name}.</Card>
+            <Card className="p-5 text-sm text-slate-500 dark:text-slate-400">{t("No loans with {name}.", { name: person.name })}</Card>
           )}
         </section>
         <aside>

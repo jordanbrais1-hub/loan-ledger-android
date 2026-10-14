@@ -1,14 +1,15 @@
 import { z } from "zod";
 import { db, nowISO } from "./db";
+import { t } from "./i18n";
 import type { FormState } from "./types";
-import { loanSchema, paymentSchema, personSchema } from "./validation";
+import { entrySchema, loanSchema, personSchema } from "./validation";
 
 // These used to be server actions writing to Postgres. They now write to the
 // on-device database; pages re-render on their own because they read through
 // live queries.
 
 function invalid(error: z.ZodError): FormState {
-  return { error: "Please fix the highlighted fields.", fieldErrors: z.flattenError(error).fieldErrors };
+  return { error: t("Please fix the highlighted fields."), fieldErrors: z.flattenError(error).fieldErrors };
 }
 
 /** Finds a person by name (case-insensitive) or creates them. */
@@ -29,14 +30,25 @@ export async function saveLoan(_prev: FormState, formData: FormData): Promise<Fo
 
   try {
     const loanId = await db().transaction("rw", db().people, db().loans, async () => {
+      const periodic = d.plan !== "single";
       const values = {
         person_id: await upsertPerson(d.personName),
         direction: d.direction,
         currency: d.currency,
         principal: d.principal,
+        plan: d.plan,
         interest_rate: d.interestRate,
+        rate_period: d.ratePeriod,
         start_date: d.startDate,
-        due_date: d.dueDate,
+        due_date: periodic ? null : d.dueDate,
+        frequency: d.frequency,
+        first_due_date: periodic ? d.firstDueDate : null,
+        term: periodic ? d.term : null,
+        amortization: d.amortization,
+        late_fee_type: d.lateFeeType,
+        late_fee_value: d.lateFeeType === "none" ? 0 : (d.lateFeeValue ?? 0),
+        grace_days: d.lateFeeType === "none" ? 0 : (d.graceDays ?? 0),
+        early_payoff: d.earlyPayoff,
         description: d.description,
         notes: d.notes,
         updated_at: nowISO(),
@@ -50,7 +62,7 @@ export async function saveLoan(_prev: FormState, formData: FormData): Promise<Fo
     return { ok: true, id: loanId };
   } catch (e) {
     console.error(e);
-    return { error: "Couldn't save the loan." };
+    return { error: t("Couldn't save the loan.") };
   }
 }
 
@@ -61,17 +73,30 @@ export async function deleteLoan(id: number) {
   });
 }
 
-export async function addPayment(_prev: FormState, formData: FormData): Promise<FormState> {
-  const parsed = paymentSchema.safeParse(Object.fromEntries(formData));
+/** Records a payment, more money lent, a fee, or a forgiven amount on a loan. */
+export async function addEntry(_prev: FormState, formData: FormData): Promise<FormState> {
+  const parsed = entrySchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return invalid(parsed.error);
   const d = parsed.data;
   try {
+    const loan = await db().loans.get(d.loanId);
+    if (!loan) return { error: t("That loan no longer exists.") };
+    if (d.kind === "disbursement" && loan.plan === "installments") {
+      return { error: t("Installment loans can't be increased. Create a new loan instead.") };
+    }
     await db().payments.add({
-      loan_id: d.loanId, amount: d.amount, paid_on: d.paidOn, method: d.method, note: d.note, created_at: nowISO(),
+      loan_id: d.loanId,
+      kind: d.kind,
+      allocation: d.kind === "payment" ? d.allocation : "auto",
+      amount: d.amount,
+      paid_on: d.paidOn,
+      method: d.kind === "payment" ? d.method : null,
+      note: d.note,
+      created_at: nowISO(),
     });
   } catch (e) {
     console.error(e);
-    return { error: "Couldn't record the payment." };
+    return { error: t("Couldn't save that.") };
   }
   return { ok: true };
 }
@@ -88,12 +113,12 @@ export async function updatePerson(_prev: FormState, formData: FormData): Promis
   try {
     const clash = await db().people.where("name_lower").equals(name_lower).first();
     if (clash && clash.id !== d.id) {
-      return { fieldErrors: { name: ["Someone else already has this name"] } };
+      return { fieldErrors: { name: [t("Someone else already has this name")] } };
     }
     await db().people.update(d.id, { name: d.name, name_lower, phone: d.phone, email: d.email, notes: d.notes });
   } catch (e) {
     console.error(e);
-    return { error: "Couldn't save changes." };
+    return { error: t("Couldn't save changes.") };
   }
   return { ok: true };
 }

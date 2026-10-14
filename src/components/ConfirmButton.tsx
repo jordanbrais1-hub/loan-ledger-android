@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useTransition, type ReactNode } from "react";
+import { t } from "@/lib/i18n";
 import { buttonClass } from "./ui";
 
 /** A button that asks for confirmation in a dialog before running an action. */
@@ -8,7 +9,7 @@ export function ConfirmButton({
   action,
   title,
   message,
-  confirmLabel = "Delete",
+  confirmLabel,
   className = buttonClass.ghostDanger,
   children,
 }: {
@@ -37,7 +38,7 @@ export function ConfirmButton({
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{message}</p>
           <div className="mt-5 flex justify-end gap-2">
             <button type="button" className={buttonClass.secondary} onClick={() => dialogRef.current?.close()}>
-              Cancel
+              {t("Cancel")}
             </button>
             <button
               type="button"
@@ -50,7 +51,7 @@ export function ConfirmButton({
                 })
               }
             >
-              {pending ? "Working…" : confirmLabel}
+              {pending ? t("Working…") : (confirmLabel ?? t("Delete"))}
             </button>
           </div>
         </div>

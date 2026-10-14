@@ -7,6 +7,8 @@
  * and signing out locks it again.
  */
 
+import { t } from "./i18n";
+
 export interface Account {
   /** Google's stable user id ("sub"). Also names this account's local database. */
   id: string;
@@ -53,13 +55,13 @@ function socialLogin() {
 
 export async function signInWithGoogle(): Promise<Account> {
   if (!googleClientId) {
-    throw new Error("Google sign-in isn't configured. Set NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID in .env.local.");
+    throw new Error(t("Google sign-in isn't configured. Set NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID in .env.local."));
   }
   // No `scopes` option: email, profile and openid are the plugin's defaults, and passing
   // any scopes on Android requires a modified MainActivity ("You CANNOT use scopes…").
   const { result } = await (await socialLogin()).login({ provider: "google", options: {} });
   if (result.responseType !== "online" || !result.profile.id) {
-    throw new Error("Google didn't return an account. Please try again.");
+    throw new Error(t("Google didn't return an account. Please try again."));
   }
   const { id, name, email, imageUrl } = result.profile;
   const account = { id, name, email, picture: imageUrl };

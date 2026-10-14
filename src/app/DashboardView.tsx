@@ -4,6 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import Link from "next/link";
 import { LoanList } from "@/components/LoanList";
 import { Card, EmptyState, Loading, PageHeader, StatCard, buttonClass } from "@/components/ui";
+import { t } from "@/lib/i18n";
 import { amountLines, amountsSign, formatDate, formatMoney } from "@/lib/format";
 import { getLoans, getRecentPayments, totals } from "@/lib/queries";
 import { loanHref } from "@/lib/routes";
@@ -16,13 +17,13 @@ export function DashboardView() {
   if (loans.length === 0) {
     return (
       <>
-        <PageHeader title="Welcome to your Loan Ledger" subtitle="Your notebook for money you lend and borrow." />
+        <PageHeader title={t("Welcome to your Loan Ledger")} subtitle={t("Your notebook for money you lend and borrow.")} />
         <EmptyState
-          title="No loans yet"
-          message="Add your first loan — money you lent to someone, or money you borrowed. We'll keep track of payments, interest and due dates for you."
+          title={t("No loans yet")}
+          message={t("Add your first loan — money you lent to someone, or money you borrowed. We'll keep track of payments, interest and due dates for you.")}
           action={
             <Link href="/loans/new" className={buttonClass.primary}>
-              + Add your first loan
+              {t("+ Add your first loan")}
             </Link>
           }
         />
@@ -40,46 +41,46 @@ export function DashboardView() {
 
   return (
     <>
-      <PageHeader title="Dashboard" subtitle="Where you stand right now." />
+      <PageHeader title={t("Dashboard")} subtitle={t("Where you stand right now.")} />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatCard label="Owed to me" value={amountLines(owedToMe)} tone="green" />
-        <StatCard label="I owe" value={amountLines(iOwe)} tone="red" />
+        <StatCard label={t("Owed to me")} value={amountLines(owedToMe)} tone="green" />
+        <StatCard label={t("I owe")} value={amountLines(iOwe)} tone="red" />
         <StatCard
-          label="Net position"
+          label={t("Net position")}
           value={amountLines(net)}
           tone={netSign > 0 ? "green" : netSign < 0 ? "red" : "neutral"}
-          hint={netSign > 0 ? "In your favor" : netSign < 0 ? "You owe more than you're owed" : "Per currency"}
+          hint={netSign > 0 ? t("In your favor") : netSign < 0 ? t("You owe more than you're owed") : t("Per currency")}
         />
         <StatCard
-          label="Open loans"
+          label={t("Open loans")}
           value={String(open.length)}
-          hint={overdue.length ? `${overdue.length} overdue` : "Nothing overdue"}
+          hint={overdue.length ? t("{n} overdue", { n: overdue.length }) : t("Nothing overdue")}
         />
       </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
         <section>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Needs attention</h2>
+            <h2 className="text-lg font-semibold">{t("Needs attention")}</h2>
             <Link href="/loans?status=open&sort=due" className="text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400">
-              All open loans &rarr;
+              {t("All open loans")} &rarr;
             </Link>
           </div>
           {attention.length ? (
             <LoanList loans={attention} />
           ) : (
             <Card className="p-5 text-sm text-slate-500 dark:text-slate-400">
-              Nothing is overdue or due in the next 7 days.
+              {t("Nothing is overdue or due in the next 7 days.")}
             </Card>
           )}
         </section>
 
         <section>
-          <h2 className="mb-3 text-lg font-semibold">Recent payments</h2>
+          <h2 className="mb-3 text-lg font-semibold">{t("Recent payments")}</h2>
           <Card className="divide-y divide-slate-200 dark:divide-slate-800">
             {recentPayments.length === 0 && (
-              <p className="p-5 text-sm text-slate-500 dark:text-slate-400">No payments recorded yet.</p>
+              <p className="p-5 text-sm text-slate-500 dark:text-slate-400">{t("No payments recorded yet.")}</p>
             )}
             {recentPayments.map((p) => (
               <Link
@@ -90,7 +91,7 @@ export function DashboardView() {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{p.person_name}</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {p.direction === "lent" ? "Paid you" : "You paid"} · {formatDate(p.paid_on)}
+                    {p.direction === "lent" ? t("Paid you") : t("You paid")} · {formatDate(p.paid_on)}
                   </p>
                 </div>
                 <span

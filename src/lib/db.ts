@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from "dexie";
 import { DEFAULT_CURRENCY, type Currency } from "./format";
+import type { Allocation, Direction, EntryKind, LoanTerms } from "./types";
 
 // Rows as stored on the device. `name_lower` backs the case-insensitive
 // unique name rule that Postgres used to enforce with an index.
@@ -13,24 +14,36 @@ export interface PersonRow {
   created_at: string;
 }
 
-export interface LoanRow {
+export interface LoanRow extends LoanTerms {
   id: number;
   person_id: number;
-  direction: "lent" | "borrowed";
+  direction: Direction;
   currency: Currency;
-  principal: number;
-  interest_rate: number;
-  start_date: string;
-  due_date: string | null;
   description: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
 }
 
+/** Repayment terms for loans saved before plans existed: one repayment, rate per year. */
+export const LEGACY_TERMS = {
+  plan: "single",
+  rate_period: "year",
+  frequency: "monthly",
+  first_due_date: null,
+  term: null,
+  amortization: "declining",
+  late_fee_type: "none",
+  late_fee_value: 0,
+  grace_days: 0,
+  early_payoff: "full_period",
+} as const satisfies Omit<LoanTerms, "principal" | "interest_rate" | "start_date" | "due_date">;
+
 export interface PaymentRow {
   id: number;
   loan_id: number;
+  kind: EntryKind;
+  allocation: Allocation;
   amount: number;
   paid_on: string;
   method: string | null;
@@ -57,6 +70,17 @@ function createLedger(name: string): LedgerDB {
       loan.currency ??= DEFAULT_CURRENCY;
     }),
   );
+  // v3: repayment plans (interest-only, installments), late fees, and entry kinds
+  // (lend more, fees, forgiveness). Existing loans keep working exactly as before.
+  db.version(3).upgrade(async (tx) => {
+    await tx.table("loans").toCollection().modify((loan) => {
+      for (const [key, value] of Object.entries(LEGACY_TERMS)) loan[key] ??= value;
+    });
+    await tx.table("payments").toCollection().modify((p) => {
+      p.kind ??= "payment";
+      p.allocation ??= "auto";
+    });
+  });
   return db;
 }
 

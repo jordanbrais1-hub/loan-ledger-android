@@ -9,6 +9,7 @@ import { LoanList } from "@/components/LoanList";
 import { EmptyState, Loading, PageHeader, buttonClass } from "@/components/ui";
 import { exportLoansCsv } from "@/lib/backup";
 import { formatAmounts } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { getLoans, totals } from "@/lib/queries";
 import type { LoanWithSummary } from "@/lib/types";
 
@@ -30,8 +31,9 @@ function applyFilters(loans: LoanWithSummary[], { q, status, direction, sort }: 
   if (sort === "oldest") filtered.reverse();
   if (sort === "balance") filtered.sort((a, b) => b.summary.balance - a.summary.balance);
   if (sort === "due") {
-    // Loans without a due date go last.
-    filtered.sort((a, b) => (a.due_date ?? "9999").localeCompare(b.due_date ?? "9999"));
+    // By the next payment date; paid loans and loans without a due date go last.
+    const nextDate = (l: LoanWithSummary) => (l.summary.status === "paid" ? null : l.summary.next?.date) ?? "9999";
+    filtered.sort((a, b) => nextDate(a).localeCompare(nextDate(b)));
   }
   return filtered;
 }
@@ -49,8 +51,10 @@ export function LoansView() {
   return (
     <>
       <PageHeader
-        title="Loans"
-        subtitle={`${allLoans.length} loan${allLoans.length === 1 ? "" : "s"} in your ledger`}
+        title={t("Loans")}
+        subtitle={
+          allLoans.length === 1 ? t("1 loan in your ledger") : t("{n} loans in your ledger", { n: allLoans.length })
+        }
         actions={
           allLoans.length > 0 && (
             <button
@@ -64,7 +68,7 @@ export function LoansView() {
                   .finally(() => setExporting(false));
               }}
             >
-              {exporting ? "Exporting…" : "Export CSV"}
+              {exporting ? t("Exporting…") : t("Export CSV")}
             </button>
           )
         }
@@ -72,11 +76,11 @@ export function LoansView() {
 
       {allLoans.length === 0 ? (
         <EmptyState
-          title="No loans yet"
-          message="When you lend or borrow money, add it here so you never lose track."
+          title={t("No loans yet")}
+          message={t("When you lend or borrow money, add it here so you never lose track.")}
           action={
             <Link href="/loans/new" className={buttonClass.primary}>
-              + Add a loan
+              {t("+ Add a loan")}
             </Link>
           }
         />
@@ -84,12 +88,15 @@ export function LoansView() {
         <>
           <LoanFilters />
           {loans.length === 0 ? (
-            <EmptyState title="No matches" message="No loans match these filters. Try clearing the search or picking another tab." />
+            <EmptyState
+              title={t("No matches")}
+              message={t("No loans match these filters. Try clearing the search or picking another tab.")}
+            />
           ) : (
             <>
               <p className="mb-2 text-sm text-slate-500 dark:text-slate-400">
-                Showing {loans.length} · Owed to me{" "}
-                <span className="font-medium text-emerald-600 dark:text-emerald-400">{formatAmounts(owedToMe)}</span> · I owe{" "}
+                {t("Showing {n}", { n: loans.length })} · {t("Owed to me")}{" "}
+                <span className="font-medium text-emerald-600 dark:text-emerald-400">{formatAmounts(owedToMe)}</span> · {t("I owe")}{" "}
                 <span className="font-medium text-rose-600 dark:text-rose-400">{formatAmounts(iOwe)}</span>
               </p>
               <LoanList loans={loans} />

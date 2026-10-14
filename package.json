@@ -1,13 +1,14 @@
 {
   "name": "loan-ledger-next",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "check": "npm run typecheck && npm run lint && npm run build",
+    "test": "tsc src/lib/loan-math.test.ts src/lib/i18n.test.ts --outDir .test-out --module commonjs --target es2022 --strict --skipLibCheck --esModuleInterop && node --test .test-out/loan-math.test.js .test-out/i18n.test.js",
+    "check": "npm run typecheck && npm run lint && npm test && npm run build",
     "android:apk": "node scripts/android.mjs apk",
     "android:bundle": "node scripts/android.mjs bundle",
     "android:open": "node scripts/android.mjs open",

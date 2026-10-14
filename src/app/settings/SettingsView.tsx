@@ -7,9 +7,12 @@ import { ConfirmButton } from "@/components/ConfirmButton";
 import { Card, FormError, PageHeader, buttonClass } from "@/components/ui";
 import { exportBackup, exportLoansCsv, importBackup } from "@/lib/backup";
 import { db } from "@/lib/db";
+import { LOCALES, localeNames, setLocale, t } from "@/lib/i18n";
+import { useLocale } from "@/components/useLocale";
 
 export function SettingsView() {
   const { account, signOut } = useAccount();
+  const locale = useLocale();
   const counts = useLiveQuery(() => Promise.all([db().loans.count(), db().people.count()]), []);
   const fileRef = useRef<HTMLInputElement>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -26,7 +29,7 @@ export function SettingsView() {
       if (done) setMessage(done);
     } catch (e) {
       console.error(e);
-      setError(e instanceof Error ? e.message : "Something went wrong.");
+      setError(e instanceof Error ? e.message : t("Something went wrong."));
     } finally {
       setBusy(null);
     }
@@ -36,12 +39,12 @@ export function SettingsView() {
     run("restore", async () => {
       const { loans } = await importBackup(await file.text());
       setPendingFile(null);
-      return `Backup restored — ${loans} loan${loans === 1 ? "" : "s"} loaded.`;
+      return loans === 1 ? t("Backup restored — 1 loan loaded.") : t("Backup restored — {n} loans loaded.", { n: loans });
     });
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <PageHeader title="Account & backup" />
+      <PageHeader title={t("Account & backup")} />
 
       <Card className="flex items-center gap-4 p-5">
         <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-indigo-100 text-lg font-semibold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
@@ -53,26 +56,53 @@ export function SettingsView() {
           )}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-medium">{account.name ?? "Signed in"}</p>
+          <p className="truncate font-medium">{account.name ?? t("Signed in")}</p>
           {account.email && <p className="truncate text-sm text-slate-500 dark:text-slate-400">{account.email}</p>}
         </div>
         <ConfirmButton
           action={signOut}
-          title="Sign out?"
-          message="Your ledger stays saved on this device. Sign in with the same Google account to open it again."
-          confirmLabel="Sign out"
+          title={t("Sign out?")}
+          message={t("Your ledger stays saved on this device. Sign in with the same Google account to open it again.")}
+          confirmLabel={t("Sign out")}
           className={buttonClass.secondary}
         >
-          Sign out
+          {t("Sign out")}
         </ConfirmButton>
+      </Card>
+
+      <Card className="flex flex-wrap items-center justify-between gap-3 p-5">
+        <div>
+          <h2 className="font-semibold">{t("Language")}</h2>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("Also in the menu under your picture.")}</p>
+        </div>
+        <div className="flex gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800" role="group" aria-label={t("Language")}>
+          {LOCALES.map((l) => (
+            <button
+              key={l}
+              type="button"
+              lang={l}
+              aria-pressed={locale === l}
+              onClick={() => setLocale(l)}
+              className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+                locale === l
+                  ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              }`}
+            >
+              {localeNames[l]}
+            </button>
+          ))}
+        </div>
       </Card>
 
       <Card className="space-y-4 p-5">
         <div>
-          <h2 className="font-semibold">Backup</h2>
+          <h2 className="font-semibold">{t("Backup")}</h2>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Your ledger{counts ? ` (${counts[0]} loans, ${counts[1]} people)` : ""} is stored only on this device. Save a
-            backup now and then — to Google Drive, email or your files — so you can restore it on a new phone.
+            {counts
+              ? t("Your ledger ({loans} loans, {people} people) is stored only on this device.", { loans: counts[0], people: counts[1] })
+              : t("Your ledger is stored only on this device.")}{" "}
+            {t("Save a backup now and then — to Google Drive, email or your files — so you can restore it on a new phone.")}
           </p>
         </div>
 
@@ -85,13 +115,13 @@ export function SettingsView() {
 
         <div className="flex flex-wrap gap-2">
           <button type="button" className={buttonClass.primary} disabled={!!busy} onClick={() => run("backup", exportBackup)}>
-            {busy === "backup" ? "Preparing…" : "Save a backup"}
+            {busy === "backup" ? t("Preparing…") : t("Save a backup")}
           </button>
           <button type="button" className={buttonClass.secondary} disabled={!!busy} onClick={() => fileRef.current?.click()}>
-            Restore from backup…
+            {t("Restore from backup…")}
           </button>
           <button type="button" className={buttonClass.secondary} disabled={!!busy} onClick={() => run("csv", exportLoansCsv)}>
-            {busy === "csv" ? "Exporting…" : "Export loans as CSV"}
+            {busy === "csv" ? t("Exporting…") : t("Export loans as CSV")}
           </button>
           <input
             ref={fileRef}
@@ -107,16 +137,16 @@ export function SettingsView() {
 
         {pendingFile && (
           <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-900 dark:bg-amber-950/40">
-            <p className="font-medium text-amber-900 dark:text-amber-200">Replace your ledger with “{pendingFile.name}”?</p>
+            <p className="font-medium text-amber-900 dark:text-amber-200">{t("Replace your ledger with “{name}”?", { name: pendingFile.name })}</p>
             <p className="mt-1 text-amber-800 dark:text-amber-300">
-              Everything currently in this ledger will be replaced by the backup. This can&apos;t be undone.
+              {t("Everything currently in this ledger will be replaced by the backup. This can't be undone.")}
             </p>
             <div className="mt-3 flex gap-2">
               <button type="button" className={buttonClass.danger} disabled={!!busy} onClick={() => restore(pendingFile)}>
-                {busy === "restore" ? "Restoring…" : "Replace my ledger"}
+                {busy === "restore" ? t("Restoring…") : t("Replace my ledger")}
               </button>
               <button type="button" className={buttonClass.secondary} onClick={() => setPendingFile(null)}>
-                Cancel
+                {t("Cancel")}
               </button>
             </div>
           </div>

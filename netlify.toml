@@ -1,0 +1,15 @@
+# Public web demo (no sign-in). See README → "Public web demo".
+[build]
+  command = "npm run build:demo"
+  publish = "out"
+
+[build.environment]
+  NODE_VERSION = "24"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"

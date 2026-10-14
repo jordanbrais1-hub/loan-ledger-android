@@ -12,6 +12,8 @@ Installing a newer APK over an older one keeps all data on the phone.
   people who want to try the app or contribute. Each visitor's data stays in
   their own browser. Shows a "Demo version" banner and a **Load example loans**
   button. Run it with `npm run demo`; build it with `npm run build:demo`.
+- `netlify.toml` to deploy the demo on Netlify (static export, security
+  headers), with a Deploy Preview for every pull request.
 - `vercel.json` to deploy the demo on Vercel (static export, security headers),
   with a preview deployment for every pull request.
 - `CONTRIBUTING.md`, a pull request template and issue templates.

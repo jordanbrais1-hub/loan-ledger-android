@@ -254,6 +254,23 @@ for people who want to try the app or help develop it.
 - Like everything in the app, demo data never leaves the browser. Clearing the
   browser's site data erases it.
 
+### Deploying the demo on Netlify
+
+`netlify.toml` already tells Netlify how to build it (`npm run build:demo`,
+publish `out/`) and adds security headers. Once:
+
+1. Sign in at [netlify.com](https://www.netlify.com) with your GitHub account.
+2. **Add new project → Import an existing project → GitHub**, authorize
+   Netlify, and pick `loan-ledger-android`.
+3. Leave the build settings as they are (they come from `netlify.toml`) and
+   click **Deploy**. No environment variables are needed.
+4. Optionally rename the site (**Project configuration → Change project
+   name**) and copy its URL (e.g. `https://loan-ledger-demo.netlify.app`) into
+   this README and the repository's **About → Website** field.
+
+Every push to `main` redeploys the demo, and every pull request gets a
+**Deploy Preview** link.
+
 ### Deploying the demo on Vercel
 
 `vercel.json` already tells Vercel how to build it (`npm run build:demo`, a
@@ -478,7 +495,8 @@ one-time loans with a yearly rate, exactly as they worked before.
 ```
 capacitor.config.ts      Android app id/name; packages the static build in out/
 next.config.ts           Static export (no server)
-vercel.json              Web demo deployment on Vercel
+netlify.toml             Web demo deployment on Netlify
+vercel.json              Web demo deployment on Vercel (alternative)
 android/                 Native Android project (Capacitor), signing config
 assets/icon.svg          App icon source
 scripts/

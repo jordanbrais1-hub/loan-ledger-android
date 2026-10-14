@@ -37,7 +37,7 @@ work on sign-in or the Android build.
    (`feat: …`, `fix: …`, `docs: …`) and open a pull request. Describe what
    changed and how you tested it.
 
-Every pull request gets its own **preview deployment** of the web demo, so the
+Every pull request gets its own **Deploy Preview** of the web demo, so the
 change can be tried before it's merged.
 
 ## Guidelines
